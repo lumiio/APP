@@ -20,7 +20,9 @@ struct AppearanceScreen: View {
         let p = Palette(theme, scheme)
         ScrollView {
             VStack(alignment: .leading, spacing: G.sectionGap) {
-                DTitle(text: L("appearance", "Appearance"), subtitle: L("appearance_subtitle", "Theme and accent colour"), onBack: { dismiss() })
+                if !AppChrome.usesSystemBars {
+                    DTitle(text: L("appearance", "Appearance"), subtitle: L("appearance_subtitle", "Theme and accent colour"), onBack: { dismiss() })
+                }
 
                 DSection(L("theme", "Theme")) {
                     DCard(padding: 6) {
@@ -112,7 +114,9 @@ struct AppearanceScreen: View {
             .padding(.bottom, 30)
         }
         .appCanvas(p)
-        .toolbar(.hidden, for: .navigationBar)
+        .adaptiveNavChrome()
+        .navigationTitle(L("appearance", "Appearance"))
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func effectRow(_ title: String, _ subtitle: String, isOn: Binding<Bool>, _ p: Palette) -> some View {

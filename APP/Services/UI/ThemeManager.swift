@@ -49,11 +49,12 @@ class ThemeManager: ObservableObject, @unchecked Sendable {
     }
 
     @Published var liquidGlassEnabled: Bool = {
-        if UserDefaults.standard.object(forKey: "APP.liquidGlass") == nil { return true }
-        return UserDefaults.standard.bool(forKey: "APP.liquidGlass")
+        let key = "APP.liquidGlass.v2"
+        if UserDefaults.standard.object(forKey: key) == nil { return true }
+        return UserDefaults.standard.bool(forKey: key)
     }() {
         didSet {
-            UserDefaults.standard.set(liquidGlassEnabled, forKey: "APP.liquidGlass")
+            UserDefaults.standard.set(liquidGlassEnabled, forKey: "APP.liquidGlass.v2")
             objectWillChange.send()
         }
     }

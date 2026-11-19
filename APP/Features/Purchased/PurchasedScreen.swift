@@ -75,17 +75,21 @@ struct PurchasedScreen: View {
                 content(p)
             }
             .appCanvas(p)
-            .toolbar(.hidden, for: .navigationBar)
+            .adaptiveNavChrome()
+            .navigationTitle("tab_purchased".localized)
+            .navigationBarTitleDisplayMode(.inline)
             .task { await model.load() }
         }
     }
 
     private func header(_ p: Palette) -> some View {
         HStack(alignment: .top) {
-            DTitle(
-                text: "tab_purchased".localized,
-                subtitle: subtitle
-            )
+            if !AppChrome.usesSystemBars {
+                DTitle(
+                    text: "tab_purchased".localized,
+                    subtitle: subtitle
+                )
+            }
             Spacer(minLength: 8)
             DIconButton(symbol: "arrow.clockwise") {
                 Haptics.tap()

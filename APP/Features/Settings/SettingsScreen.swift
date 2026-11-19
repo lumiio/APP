@@ -23,8 +23,10 @@ struct SettingsScreen: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: G.sectionGap) {
-                    DTitle(text: "tab_settings".localized, subtitle: L("settings_subtitle", "Account, appearance and app data"))
-                        .padding(.horizontal, G.gutter)
+                    if !AppChrome.usesSystemBars {
+                        DTitle(text: "tab_settings".localized, subtitle: L("settings_subtitle", "Account, appearance and app data"))
+                            .padding(.horizontal, G.gutter)
+                    }
 
                     accountBlock(p)
                     preferencesBlock(p)
@@ -34,7 +36,9 @@ struct SettingsScreen: View {
                 .padding(.bottom, 30)
             }
             .appCanvas(p)
-            .toolbar(.hidden, for: .navigationBar)
+            .adaptiveNavChrome()
+            .navigationTitle("tab_settings".localized)
+            .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: SettingsRoute.self) { route in
                 switch route {
                 case .accounts: AccountsScreen()

@@ -36,16 +36,35 @@ struct RootShell: View {
 
     var body: some View {
         let p = Palette(theme, scheme)
-        ZStack {
-            if theme.liquidGlassEnabled {
-                LiquidGlassBackdrop()
-            } else {
-                p.canvas.ignoresSafeArea()
+        if #available(iOS 26.0, *), theme.liquidGlassEnabled {
+            // Official Liquid Glass: system tab bar and system navigation bars.
+            TabView(selection: $tab) {
+                SearchScreen()
+                    .tag(AppTab.search)
+                    .tabItem { Label(AppTab.search.title, systemImage: AppTab.search.symbol) }
+                PurchasedScreen()
+                    .tag(AppTab.purchased)
+                    .tabItem { Label(AppTab.purchased.title, systemImage: AppTab.purchased.symbol) }
+                DownloadsScreen()
+                    .tag(AppTab.downloads)
+                    .tabItem { Label(AppTab.downloads.title, systemImage: AppTab.downloads.symbol) }
+                SettingsScreen()
+                    .tag(AppTab.settings)
+                    .tabItem { Label(AppTab.settings.title, systemImage: AppTab.settings.symbol) }
             }
-            content
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            tabBar(p)
+            .tint(p.accent)
+        } else {
+            ZStack {
+                if theme.liquidGlassEnabled {
+                    LiquidGlassCanvas()
+                } else {
+                    p.canvas.ignoresSafeArea()
+                }
+                content
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                tabBar(p)
+            }
         }
     }
 
