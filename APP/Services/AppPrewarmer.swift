@@ -10,8 +10,6 @@ enum AppPrewarmer {
 
         _ = ThemeManager.shared
         _ = AppStore.this
-        _ = SigningStore.shared
-        _ = SigningHistoryStore.shared
 
         let downloads = UnifiedDownloadManager.shared
         let iconURLs = downloads.downloadRequests.compactMap { request -> URL? in
