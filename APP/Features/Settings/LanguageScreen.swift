@@ -11,11 +11,7 @@ struct LanguageScreen: View {
         let p = Palette(theme, scheme)
         ScrollView {
             VStack(alignment: .leading, spacing: G.blockGap) {
-                DTitle(
-                    text: L("language", "Language"),
-                    subtitle: L("language_subtitle", "Interface language, applied immediately"),
-                    onBack: { dismiss() }
-                )
+
                 DCard(padding: 0) {
                     VStack(spacing: 0) {
                         ForEach(Array(AppLanguage.allCases.enumerated()), id: \.element.id) { index, item in
@@ -51,6 +47,7 @@ struct LanguageScreen: View {
             .padding(.bottom, 30)
         }
         .appCanvas(p)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle(L("language", "Language"))
+        .navigationBarTitleDisplayMode(.large)
     }
 }

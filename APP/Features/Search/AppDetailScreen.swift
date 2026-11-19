@@ -18,9 +18,6 @@ struct AppDetailScreen: View {
         let p = Palette(theme, scheme)
         ScrollView {
             VStack(spacing: G.blockGap) {
-                DTitle(text: app.trackName, subtitle: app.artistName ?? app.sellerName, onBack: { dismiss() })
-                    .padding(.bottom, 2)
-
                 headlineCard(p)
                 actionArea(p)
                 if !screenshots.isEmpty { screenshotStrip(p) }
@@ -32,7 +29,8 @@ struct AppDetailScreen: View {
             .padding(.bottom, 30)
         }
         .appCanvas(p)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle(app.trackName)
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: syncQueueState)
     }
 

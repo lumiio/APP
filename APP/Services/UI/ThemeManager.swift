@@ -59,7 +59,7 @@ class ThemeManager: ObservableObject, @unchecked Sendable {
         }
     }
 
-    @Published var accentColor: Color = Color(hex: "#F07E9E") {
+    @Published var accentColor: Color = Color(hex: "#007AFF") {
         didSet {
             updateWindowTintColor()
             saveAccentColor()
@@ -105,7 +105,7 @@ class ThemeManager: ObservableObject, @unchecked Sendable {
 
     private func updateAccentColor() {
 
-        let savedColorHex = UserDefaults.standard.string(forKey: "APP.userTintColor") ?? "#F07E9E"
+        let savedColorHex = UserDefaults.standard.string(forKey: "APP.userTintColor") ?? "#007AFF"
         guard savedColorHex != lastAppliedAccentHex else { return }
         let newColor = Color(hex: savedColorHex)
 

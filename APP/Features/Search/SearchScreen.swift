@@ -70,164 +70,116 @@ struct SearchScreen: View {
     @EnvironmentObject private var theme: ThemeManager
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var model: SearchModel
-    @Environment(\.colorScheme) private var scheme
 
     @State private var path = NavigationPath()
+
     var body: some View {
-        let p = Palette(theme, scheme)
         NavigationStack(path: $path) {
-            VStack(spacing: 0) {
-                header(p)
-                resultsArea(p)
+            Group {
+                if model.results.isEmpty {
+                    emptyState
+                } else {
+                    resultList
+                }
             }
-            .appCanvas(p)
-            .toolbar(.hidden, for: .navigationBar)
+            .navigationTitle("tab_search".localized)
+            .searchable(
+                text: $model.query,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: Text("search_placeholder".localized)
+            )
+            .onSubmit(of: .search) { model.submit() }
+            .onChange(of: model.query) { _, value in
+                if value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    model.clear()
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) { familyMenu }
+            }
             .navigationDestination(for: iTunesSearchResult.self) { app in
                 AppDetailScreen(app: app)
             }
         }
     }
 
-    private func header(_ p: Palette) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top) {
-                DTitle(
-                    text: "tab_search".localized,
-                    subtitle: store.selectedAccount.map { accountSubtitle($0) }
-                        ?? L("search_sign_in_hint", "Search works without an account; downloading needs one.")
-                )
-                Spacer(minLength: 8)
-                familySwitcher(p)
-            }
-            DSearchField(
-                text: $model.query,
-                placeholder: "search_placeholder".localized
-            ) {
-                model.submit()
-            }
-
-            if model.searching {
-                DSweepBar()
-            }
+    private var emptyState: some View {
+        ContentUnavailableView {
+            Label(L("search_start", "Find an app"), systemImage: "magnifyingglass")
+        } description: {
+            Text(model.notice ?? L("search_start_hint", "Type a name, then open the result to download it."))
         }
-        .padding(.horizontal, G.gutter)
-        .padding(.top, G.headerTop)
-        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 
-    private func familySwitcher(_ p: Palette) -> some View {
-        HStack(spacing: 2) {
-            ForEach(DeviceFamily.allCases, id: \.self) { family in
-                let active = model.deviceFamily == family
-                Button {
-                    Haptics.tap()
-                    model.switchFamily(family)
-                } label: {
-                    Text(family == .phone ? "iPhone" : "iPad")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(active ? Color.white : p.subtext)
-                        .padding(.horizontal, 9)
-                        .frame(height: 26)
-                        .background(
-                            Capsule().fill(active ? p.accent : Color.clear)
-                        )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(3)
-        .background(
-            Capsule().fill(p.card)
-        )
-        .overlay(Capsule().strokeBorder(p.line, lineWidth: 1))
-    }
-
-    private func accountSubtitle(_ account: Account) -> String {
-        let region = account.countryCode.isEmpty ? account.countryCode : account.countryCode.uppercased()
-        return region.isEmpty ? account.email : "\(account.email) · \(region)"
-    }
-
-    @ViewBuilder
-    private func resultsArea(_ p: Palette) -> some View {
-        ScrollView {
-            LazyVStack(spacing: 10) {
-                if let notice = model.notice, !model.searching {
-                    DNote(text: notice, isError: model.results.isEmpty)
-                        .padding(.horizontal, G.gutter)
-                        .padding(.top, 6)
-                }
-
-                if model.results.isEmpty && !model.searching {
-                    if model.notice == nil {
-                        DEmpty(
-                            symbol: "magnifyingglass",
-                            title: L("search_start", "Find an app"),
-                            message: L("search_start_hint", "Type a name, then open the result to download it.")
-                        )
+    private var resultList: some View {
+        List {
+            Section {
+                ForEach(model.results, id: \.id) { app in
+                    NavigationLink {
+                        AppDetailScreen(app: app)
+                    } label: {
+                        row(app)
                     }
-                } else {
-                    DCard(padding: 0) {
-                        VStack(spacing: 0) {
-                            ForEach(Array(model.results.enumerated()), id: \.element.id) { index, app in
-                                NavigationLink(value: app) {
-                                    resultRow(app, p)
-                                }
-                                .buttonStyle(PressableStyle())
-                                if index < model.results.count - 1 {
-                                    DHairline().padding(.leading, 82)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, G.gutter)
+                }
+            } header: {
+                if let notice = model.notice {
+                    Text(notice)
                 }
             }
-            .padding(.bottom, 24)
         }
-        .scrollDismissesKeyboard(.immediately)
+        .listStyle(.insetGrouped)
+        .overlay {
+            if model.searching { ProgressView().controlSize(.large) }
+        }
     }
 
-    private func resultRow(_ app: iTunesSearchResult, _ p: Palette) -> some View {
+    private func row(_ app: iTunesSearchResult) -> some View {
         HStack(spacing: 12) {
-            DArtwork(url: app.artworkUrl100 ?? app.artworkUrl60, size: 56, radius: 14)
-            VStack(alignment: .leading, spacing: 4) {
+            DArtwork(url: app.artworkUrl100 ?? app.artworkUrl60, size: 52, radius: 12)
+            VStack(alignment: .leading, spacing: 3) {
                 Text(app.trackName)
-                    .font(T.medium(15))
-                    .foregroundStyle(p.text)
+                    .font(.body)
                     .lineLimit(1)
                 Text(app.artistName ?? app.sellerName ?? "")
-                    .font(T.body(12))
-                    .foregroundStyle(p.subtext)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
-                HStack(spacing: 6) {
-                    if let genre = app.primaryGenreName {
-                        Text(genre)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(p.muted)
-                    }
-                    if let rating = app.averageUserRating, rating > 0 {
-                        HStack(spacing: 2) {
-                            Image(systemName: "star.fill").font(.system(size: 9))
-                            Text(String(format: "%.1f", rating)).font(.system(size: 10, weight: .medium))
-                        }
-                        .foregroundStyle(p.muted)
-                    }
-                }
+                Text([app.primaryGenreName, app.averageUserRating.map { String(format: "★ %.1f", $0) }]
+                    .compactMap { $0 }
+                    .joined(separator: " · "))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
             }
-            Spacer(minLength: 6)
-            if let price = app.formattedPrice, (app.price ?? 0) > 0 {
-                DChip(text: price, tint: p.accent)
-            } else {
-                Text(L("get", "GET"))
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(p.accent)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(p.accentSoft(0.12)))
-            }
+            Spacer(minLength: 8)
+            Text(priceLabel(app))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.accentColor)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 5)
+                .background(Capsule().fill(Color.accentColor.opacity(0.12)))
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 11)
-        .contentShape(Rectangle())
+        .padding(.vertical, 2)
+    }
+
+    private func priceLabel(_ app: iTunesSearchResult) -> String {
+        if let price = app.formattedPrice, (app.price ?? 0) > 0 { return price }
+        return L("get", "GET")
+    }
+
+    private var familyMenu: some View {
+        Menu {
+            Picker(L("device", "Device"), selection: Binding(
+                get: { model.deviceFamily },
+                set: { model.switchFamily($0) }
+            )) {
+                Text("iPhone").tag(DeviceFamily.phone)
+                Text("iPad").tag(DeviceFamily.pad)
+            }
+        } label: {
+            Image(systemName: model.deviceFamily == .phone ? "iphone" : "ipad")
+        }
     }
 }

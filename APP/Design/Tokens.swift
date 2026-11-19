@@ -1,11 +1,12 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 /// Shared geometry. Everything on screen derives its spacing from here so the
 /// app keeps one rhythm instead of per-screen ad-hoc numbers.
 enum G {
     static let gutter: CGFloat = 20
-    static let cardRadius: CGFloat = 20
+    static let cardRadius: CGFloat = 12
     static let fieldRadius: CGFloat = 14
     static let controlRadius: CGFloat = 13
     static let cardPadding: CGFloat = 16
@@ -31,15 +32,16 @@ struct Palette {
     init(_ theme: ThemeManager, _ scheme: ColorScheme) {
         let dark = scheme == .dark
         isDark = dark
-        canvas = dark ? Color(hex: "#0B0B0D") : Color(hex: "#F2F2F4")
-        card = dark ? Color(hex: "#151517") : Color.white
-        fill = dark ? Color(hex: "#1E1E22") : Color(hex: "#E8E8EC")
-        line = dark ? Color.white.opacity(0.07) : Color.black.opacity(0.06)
-        text = dark ? Color(hex: "#F4F4F6") : Color(hex: "#141416")
-        subtext = dark ? Color(hex: "#A2A2AA") : Color(hex: "#606069")
-        muted = dark ? Color(hex: "#6B6B73") : Color(hex: "#9A9AA2")
+        // Native iOS surface ramp; no tinted greys of our own.
+        canvas = Color(uiColor: .systemGroupedBackground)
+        card = Color(uiColor: .secondarySystemGroupedBackground)
+        fill = Color(uiColor: .tertiarySystemFill)
+        line = Color(uiColor: .separator)
+        text = Color(uiColor: .label)
+        subtext = Color(uiColor: .secondaryLabel)
+        muted = Color(uiColor: .tertiaryLabel)
         accent = theme.accentColor
-        danger = Color(hex: "#E2585F")
+        danger = Color(uiColor: .systemRed)
     }
 
     func accentSoft(_ opacity: Double = 0.14) -> Color { accent.opacity(isDark ? opacity : opacity + 0.03) }

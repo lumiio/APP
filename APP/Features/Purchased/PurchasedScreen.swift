@@ -70,33 +70,23 @@ struct PurchasedScreen: View {
     var body: some View {
         let p = Palette(theme, scheme)
         NavigationStack {
-            VStack(spacing: 0) {
-                header(p)
-                content(p)
-            }
-            .appCanvas(p)
-            .toolbar(.hidden, for: .navigationBar)
-            .task { await model.load() }
+            content(p)
+                .appCanvas(p)
+                .navigationTitle("tab_purchased".localized)
+                .navigationBarTitleDisplayMode(.large)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            Haptics.tap()
+                            Task { await model.load(force: true) }
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        .disabled(model.loading)
+                    }
+                }
+                .task { await model.load() }
         }
-    }
-
-    private func header(_ p: Palette) -> some View {
-        HStack(alignment: .top) {
-            DTitle(
-                text: "tab_purchased".localized,
-                subtitle: subtitle
-            )
-            Spacer(minLength: 8)
-            DIconButton(symbol: "arrow.clockwise") {
-                Haptics.tap()
-                Task { await model.load(force: true) }
-            }
-            .rotationEffect(.degrees(model.loading ? 180 : 0))
-            .animation(.easeInOut(duration: 0.3), value: model.loading)
-        }
-        .padding(.horizontal, G.gutter)
-        .padding(.top, G.headerTop)
-        .padding(.bottom, 10)
     }
 
     private var subtitle: String {

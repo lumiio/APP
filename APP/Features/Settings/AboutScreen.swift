@@ -10,12 +10,6 @@ struct AboutScreen: View {
     var body: some View {
         let p = Palette(theme, scheme)
         VStack(alignment: .leading, spacing: G.sectionGap) {
-            DTitle(
-                text: "about".localized,
-                subtitle: L("about_subtitle", "App Store client for downloading your own purchases"),
-                onBack: { dismiss() }
-            )
-
             DCard {
                 VStack(spacing: 0) {
                     infoRow(L("version", "Version"), shortVersion, p)
@@ -50,7 +44,8 @@ struct AboutScreen: View {
         .padding(.top, G.headerTop)
         .padding(.bottom, 24)
         .appCanvas(p)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle("about".localized)
+        .navigationBarTitleDisplayMode(.large)
     }
 
     private func infoRow(_ label: String, _ value: String, _ p: Palette) -> some View {

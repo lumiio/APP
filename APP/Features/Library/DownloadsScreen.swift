@@ -13,56 +13,50 @@ struct DownloadsScreen: View {
     }
 
     var body: some View {
-        let p = Palette(theme, scheme)
         NavigationStack {
-            VStack(spacing: 0) {
-                header(p)
-                ScrollView {
-                    VStack(spacing: 10) {
-                        if requests.isEmpty {
-                            DEmpty(
-                                symbol: "arrow.down.to.line",
-                                title: "no_downloads".localized,
-                                message: L("downloads_empty_hint", "Apps you start from Search or Purchased land here.")
-                            )
-                        } else {
-                            ForEach(requests, id: \.id) { request in
-                                NavigationLink {
-                                    DownloadDetailScreen(request: request)
-                                } label: {
-                                    DownloadRow(request: request)
-                                }
-                                .buttonStyle(PressableStyle())
+            ScrollView {
+                VStack(spacing: 10) {
+                    if requests.isEmpty {
+                        ContentUnavailableView {
+                            Label("no_downloads".localized, systemImage: "arrow.down.to.line")
+                        } description: {
+                            Text(L("downloads_empty_hint", "Apps you start from Search or Purchased land here."))
+                        }
+                        .padding(.top, 40)
+                    } else {
+                        ForEach(requests, id: \.id) { request in
+                            NavigationLink {
+                                DownloadDetailScreen(request: request)
+                            } label: {
+                                DownloadRow(request: request)
                             }
+                            .buttonStyle(PressableStyle())
                         }
                     }
-                    .padding(.horizontal, G.gutter)
-                    .padding(.bottom, 24)
                 }
-                .refreshable {
-                    manager.saveDownloadTasks()
+                .padding(.horizontal, G.gutter)
+                .padding(.bottom, 24)
+            }
+            .refreshable {
+                manager.saveDownloadTasks()
+            }
+            .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+            .navigationTitle("tab_downloads".localized)
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        Haptics.tap()
+                        showDecrypt = true
+                    } label: {
+                        Image(systemName: "waveform.path.ecg")
+                    }
                 }
             }
-            .appCanvas(p)
-            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showDecrypt) {
                 DecryptScreen()
             }
         }
-    }
-
-    private func header(_ p: Palette) -> some View {
-        HStack(alignment: .top) {
-            DTitle(text: "tab_downloads".localized, subtitle: summary)
-            Spacer(minLength: 8)
-            DIconButton(symbol: "waveform.path.ecg") {
-                Haptics.tap()
-                showDecrypt = true
-            }
-        }
-        .padding(.horizontal, G.gutter)
-        .padding(.top, G.headerTop)
-        .padding(.bottom, 10)
     }
 
     private var summary: String {

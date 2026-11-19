@@ -8,11 +8,11 @@ struct AppearanceScreen: View {
     @Environment(\.dismiss) private var dismiss
 
     private let accents: [(name: String, hex: String)] = [
-        ("Sakura", "#F07E9E"),
-        ("Coral", "#E2585F"),
-        ("Violet", "#8B7CF6"),
-        ("Ocean", "#4C9EEB"),
+        ("Blue", "#007AFF"),
         ("Mint", "#3BA55D"),
+        ("Orange", "#FF9500"),
+        ("Pink", "#F07E9E"),
+        ("Violet", "#8B7CF6"),
         ("Graphite", "#8E8E93")
     ]
 
@@ -20,8 +20,6 @@ struct AppearanceScreen: View {
         let p = Palette(theme, scheme)
         ScrollView {
             VStack(alignment: .leading, spacing: G.sectionGap) {
-                DTitle(text: L("appearance", "Appearance"), subtitle: L("appearance_subtitle", "Theme and accent colour"), onBack: { dismiss() })
-
                 DSection(L("theme", "Theme")) {
                     DCard(padding: 6) {
                         HStack(spacing: 4) {
@@ -112,7 +110,8 @@ struct AppearanceScreen: View {
             .padding(.bottom, 30)
         }
         .appCanvas(p)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle(L("appearance", "Appearance"))
+        .navigationBarTitleDisplayMode(.large)
     }
 
     private func effectRow(_ title: String, _ subtitle: String, isOn: Binding<Bool>, _ p: Palette) -> some View {

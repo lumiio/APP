@@ -335,25 +335,12 @@ struct DEmpty: View {
     var message: String? = nil
 
     var body: some View {
-        let p = Palette(theme, scheme)
-        VStack(spacing: 10) {
-            Image(systemName: symbol)
-                .font(.system(size: 34, weight: .light))
-                .foregroundStyle(p.muted)
-            Text(title)
-                .font(T.headline(15))
-                .foregroundStyle(p.text)
-            if let message {
-                Text(message)
-                    .font(T.body(13))
-                    .foregroundStyle(p.subtext)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .padding(.horizontal, 24)
-            }
+        ContentUnavailableView {
+            Label(title, systemImage: symbol)
+        } description: {
+            if let message { Text(message) }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 54)
+        .padding(.vertical, 24)
     }
 }
 

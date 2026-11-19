@@ -36,90 +36,20 @@ struct RootShell: View {
 
     var body: some View {
         let p = Palette(theme, scheme)
-        ZStack {
-            if theme.liquidGlassEnabled {
-                LiquidGlassCanvas()
-            } else {
-                p.canvas.ignoresSafeArea()
-            }
-            content
+        TabView(selection: $tab) {
+            SearchScreen()
+                .tabItem { Label(AppTab.search.title, systemImage: AppTab.search.symbol) }
+                .tag(AppTab.search)
+            PurchasedScreen()
+                .tabItem { Label(AppTab.purchased.title, systemImage: AppTab.purchased.symbol) }
+                .tag(AppTab.purchased)
+            DownloadsScreen()
+                .tabItem { Label(AppTab.downloads.title, systemImage: AppTab.downloads.symbol) }
+                .tag(AppTab.downloads)
+            SettingsScreen()
+                .tabItem { Label(AppTab.settings.title, systemImage: AppTab.settings.symbol) }
+                .tag(AppTab.settings)
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            tabBar(p)
-                .padding(.horizontal, G.gutter)
-                .padding(.top, 6)
-                .padding(.bottom, 4)
-        }
-    }
-
-    @ViewBuilder
-    private var content: some View {
-        switch tab {
-        case .search: SearchScreen()
-        case .purchased: PurchasedScreen()
-        case .downloads: DownloadsScreen()
-        case .settings: SettingsScreen()
-        }
-    }
-
-    // MARK: - Tab bar
-
-    @ViewBuilder
-    private func tabBar(_ p: Palette) -> some View {
-        if #available(iOS 26.0, *), theme.liquidGlassEnabled {
-            GlassEffectContainer(spacing: 8) {
-                items(p)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 6)
-                    .glassEffect(.regular, in: Capsule(style: .continuous))
-            }
-        } else {
-            items(p)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 6)
-                .background {
-                    Capsule(style: .continuous)
-                        .fill(.ultraThinMaterial)
-                        .overlay(
-                            Capsule(style: .continuous)
-                                .strokeBorder(p.line, lineWidth: 1)
-                        )
-                }
-                .shadow(color: Color.black.opacity(p.isDark ? 0.35 : 0.10), radius: 16, x: 0, y: 8)
-        }
-    }
-
-    private func items(_ p: Palette) -> some View {
-        HStack(spacing: 2) {
-            ForEach(AppTab.allCases) { item in
-                let active = item == tab
-                Button {
-                    guard tab != item else { return }
-                    Haptics.tap()
-                    withAnimation(.easeOut(duration: 0.16)) { tab = item }
-                } label: {
-                    VStack(spacing: 3) {
-                        Image(systemName: item.symbol)
-                            .font(.system(size: 17, weight: active ? .semibold : .regular))
-                            .symbolVariant(active ? .fill : .none)
-                        Text(item.title)
-                            .font(.system(size: 10.5, weight: active ? .semibold : .medium))
-                    }
-                    .foregroundStyle(active ? p.accent : p.subtext)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
-                    .background {
-                        if active {
-                            Capsule(style: .continuous)
-                                .fill(p.accent.opacity(p.isDark ? 0.16 : 0.11))
-                                .padding(.horizontal, 2)
-                                .padding(.vertical, 1)
-                        }
-                    }
-                    .contentShape(Capsule(style: .continuous))
-                }
-                .buttonStyle(PressableStyle())
-            }
-        }
+        .tint(p.accent)
     }
 }

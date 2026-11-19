@@ -14,12 +14,6 @@ struct AccountsScreen: View {
         let p = Palette(theme, scheme)
         ScrollView {
             VStack(alignment: .leading, spacing: G.blockGap) {
-                DTitle(
-                    text: L("account_management", "Accounts"),
-                    subtitle: L("accounts_subtitle", "Downloads always use the selected account"),
-                    onBack: { dismiss() }
-                )
-
                 if store.savedAccounts.isEmpty {
                     DEmpty(
                         symbol: "person.crop.circle",
@@ -43,7 +37,8 @@ struct AccountsScreen: View {
             .padding(.bottom, 30)
         }
         .appCanvas(p)
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle(L("account_management", "Accounts"))
+        .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showAdd) {
             AddAccountScreen()
         }
