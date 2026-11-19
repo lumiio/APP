@@ -29,14 +29,48 @@ static bool pread_full(int fd, void *buf, size_t n, off_t off) {
     return true;
 }
 
-static int mkdirs(const char *path) {
-    char tmp[4096];
-    snprintf(tmp, sizeof tmp, "%s", path);
-    for (char *p = tmp + 1; *p; p++) {
-        if (*p == '/') { *p = 0; if (mkdir(tmp, 0755) != 0 && errno != EEXIST) return -1; *p = '/'; }
+static bool write_full(int fd, const void *buf, size_t n) {
+    const uint8_t *p = buf;
+    while (n) {
+        ssize_t r = write(fd, p, n);
+        if (r <= 0) { if (r < 0 && errno == EINTR) continue; return false; }
+        p += r; n -= (size_t)r;
     }
-    if (mkdir(tmp, 0755) != 0 && errno != EEXIST) return -1;
+    return true;
+}
+
+static const char *zlib_reason(int zr) {
+    switch (zr) {
+        case Z_OK:            return "ok";
+        case Z_STREAM_END:    return "stream end";
+        case Z_NEED_DICT:     return "dictionary required";
+        case Z_ERRNO:         return "file error";
+        case Z_STREAM_ERROR:  return "invalid stream state";
+        case Z_DATA_ERROR:    return "data error (corrupt or encrypted stream)";
+        case Z_MEM_ERROR:     return "out of memory";
+        case Z_BUF_ERROR:     return "no progress (truncated input)";
+        case Z_VERSION_ERROR: return "zlib version mismatch";
+    }
+    return "unknown zlib error";
+}
+
+static int mk_one_dir(const char *path) {
+    if (mkdir(path, 0755) == 0) return 0;
+    if (errno != EEXIST) return -1;
+    struct stat st;
+    if (stat(path, &st) != 0) return -1;
+    if (!S_ISDIR(st.st_mode)) { errno = ENOTDIR; return -1; }
     return 0;
+}
+
+static int mkdirs(const char *path) {
+    char tmp[8192];
+    int n = snprintf(tmp, sizeof tmp, "%s", path);
+    if (n <= 0 || (size_t)n >= sizeof tmp) { errno = ENAMETOOLONG; return -1; }
+    for (char *p = tmp + 1; *p; p++) {
+        if (*p == '/') { *p = 0; if (mk_one_dir(tmp) != 0) return -1; *p = '/'; }
+    }
+    return mk_one_dir(tmp);
 }
 
 static bool name_is_safe(const char *n) {
@@ -87,9 +121,9 @@ int zip_extract_all(const char *zip_path, const char *dest_dir, char *err, size_
     int rc = 0;
     uint64_t p = 0;
     for (uint64_t i = 0; i < entries && rc == 0; i++) {
-        if (p + 46 > cd_size || rd32(cd + p) != 0x02014b50) { snprintf(err, errlen, "bad CD entry %llu", i); rc = -1; break; }
+        if (p + 46 > cd_size || rd32(cd + p) != 0x02014b50) { snprintf(err, errlen, "bad CD entry %llu", (unsigned long long)i); rc = -1; break; }
         const uint8_t *e = cd + p;
-        uint16_t made_by = rd16(e + 4), method = rd16(e + 10);
+        uint16_t made_by = rd16(e + 4), method = rd16(e + 10), flags = rd16(e + 8);
         uint32_t crc = rd32(e + 16);
         uint64_t csize = rd32(e + 20), usize = rd32(e + 24);
         uint16_t nlen = rd16(e + 28), xlen = rd16(e + 30), clen = rd16(e + 32);
@@ -115,25 +149,62 @@ int zip_extract_all(const char *zip_path, const char *dest_dir, char *err, size_
 
         if (!name_is_safe(name)) { snprintf(err, errlen, "unsafe entry name: %s", name); rc = -1; break; }
         if (strncmp(name, "__MACOSX/", 9) == 0) continue;
+        if (loff == 0xFFFFFFFFull) {
+            snprintf(err, errlen, "bad CD entry %llu: ZIP64 offset marker without ZIP64 extra: %s", (unsigned long long)i, name);
+            rc = -1; break;
+        }
+        if (flags & 0x0001) {
+            snprintf(err, errlen, "extract failed: %s (entry is encrypted; password-protected archives are not supported)", name);
+            rc = -1; break;
+        }
         char out[8192];
-        snprintf(out, sizeof out, "%s/%s", dest_dir, name);
-        size_t ol = strlen(out);
-        if (out[ol - 1] == '/') { out[ol - 1] = 0; if (mkdirs(out) != 0) { snprintf(err, errlen, "mkdir %s: %s", out, strerror(errno)); rc = -1; } continue; }
+        int outn = snprintf(out, sizeof out, "%s/%s", dest_dir, name);
+        if (outn <= 0 || (size_t)outn >= sizeof out) { snprintf(err, errlen, "entry path too long: %s", name); rc = -1; break; }
+        size_t ol = (size_t)outn;
+        bool is_unix = (made_by >> 8) == 3;
+        mode_t mode = is_unix ? (mode_t)((ext >> 16) & 07777) : 0644;
+        bool dir_by_name = out[ol - 1] == '/';
+        bool dir_by_attr = is_unix ? (((ext >> 16) & S_IFMT) == S_IFDIR) : (((made_by >> 8) == 0) && (ext & 0x10));
+        if (dir_by_name || dir_by_attr) {
+            if (dir_by_name) { out[ol - 1] = 0; ol--; }
+            if (mkdirs(out) != 0) { snprintf(err, errlen, "mkdir %s: %s", out, strerror(errno)); rc = -1; }
+            continue;
+        }
         char parent[8192]; snprintf(parent, sizeof parent, "%s", out);
-        char *slash = strrchr(parent, '/'); if (slash) { *slash = 0; mkdirs(parent); }
+        char *slash = strrchr(parent, '/');
+        if (slash) {
+            *slash = 0;
+            if (mkdirs(parent) != 0) { snprintf(err, errlen, "mkdir %s: %s", parent, strerror(errno)); rc = -1; break; }
+        }
 
         uint8_t lh[30];
         if (!pread_full(fd, lh, 30, (off_t)loff) || rd32(lh) != 0x04034b50) { snprintf(err, errlen, "bad local header: %s", name); rc = -1; break; }
         uint64_t data = loff + 30 + rd16(lh + 26) + rd16(lh + 28);
-        bool is_unix = (made_by >> 8) == 3;
-        mode_t mode = is_unix ? (mode_t)((ext >> 16) & 07777) : 0644;
+        if (csize == 0xFFFFFFFFull || usize == 0xFFFFFFFFull) {
+            uint64_t lcsize = rd32(lh + 18), lusize = rd32(lh + 22);
+            bool recovered = true;
+            if (csize == 0xFFFFFFFFull) {
+                if (lcsize && lcsize != 0xFFFFFFFFull) csize = lcsize; else recovered = false;
+            }
+            if (usize == 0xFFFFFFFFull) {
+                if (lusize && lusize != 0xFFFFFFFFull) usize = lusize; else recovered = false;
+            }
+            if (!recovered) {
+                snprintf(err, errlen, "bad CD entry %llu: ZIP64 size marker without ZIP64 extra, local header has no sizes: %s",
+                         (unsigned long long)i, name);
+                rc = -1; break;
+            }
+        }
         bool is_link = is_unix && (((ext >> 16) & S_IFMT) == S_IFLNK);
         if (method != 0 && method != 8) { snprintf(err, errlen, "unsupported method %u: %s", method, name); rc = -1; break; }
 
         if (is_link) {
             if (usize > 1024 || method != 0) { snprintf(err, errlen, "odd symlink %s", name); rc = -1; break; }
             char tgt[1025] = {0};
-            if (!pread_full(fd, tgt, (size_t)usize, (off_t)data)) { rc = -1; break; }
+            if (!pread_full(fd, tgt, (size_t)usize, (off_t)data)) {
+                snprintf(err, errlen, "extract failed: %s (symlink target read error at 0x%llx: %s)", name, (unsigned long long)data, strerror(errno));
+                rc = -1; break;
+            }
             if (!link_target_is_safe(tgt)) { snprintf(err, errlen, "unsafe symlink %s -> %s", name, tgt); rc = -1; break; }
             unlink(out);
             if (symlink(tgt, out) != 0) { snprintf(err, errlen, "symlink %s: %s", name, strerror(errno)); rc = -1; }
@@ -144,39 +215,82 @@ int zip_extract_all(const char *zip_path, const char *dest_dir, char *err, size_
         if (ofd < 0) { snprintf(err, errlen, "create %s: %s", out, strerror(errno)); rc = -1; break; }
         uLong c = crc32(0, Z_NULL, 0);
         uint64_t remaining = csize, pos = data, written = 0;
+        bool ok = true;
+        char why[320] = {0};
         if (method == 0) {
             while (remaining) {
                 size_t n = remaining > CHUNK ? CHUNK : (size_t)remaining;
-                if (!pread_full(fd, in, n, (off_t)pos)) { rc = -1; break; }
+                if (!pread_full(fd, in, n, (off_t)pos)) {
+                    snprintf(why, sizeof why, "read error at 0x%llx (%zu of %llu bytes): %s",
+                             (unsigned long long)pos, n, (unsigned long long)remaining, strerror(errno));
+                    ok = false; break;
+                }
                 c = crc32(c, in, (uInt)n);
-                if (write(ofd, in, n) != (ssize_t)n) { rc = -1; break; }
+                if (!write_full(ofd, in, n)) {
+                    snprintf(why, sizeof why, "write error after %llu bytes: %s", (unsigned long long)written, strerror(errno));
+                    ok = false; break;
+                }
                 remaining -= n; pos += n; written += n;
             }
-        } else {
+        } else if (usize || csize) {
             z_stream zs; memset(&zs, 0, sizeof zs);
-            inflateInit2(&zs, -MAX_WBITS);
-            int zr = Z_OK;
-            while (zr != Z_STREAM_END && rc == 0) {
-                if (zs.avail_in == 0) {
-                    if (!remaining) { rc = -1; break; }
+            int zr = inflateInit2(&zs, -MAX_WBITS);
+            if (zr != Z_OK) {
+                snprintf(why, sizeof why, "inflateInit: %s", zlib_reason(zr));
+                ok = false;
+            }
+            while (ok) {
+                if (zs.avail_in == 0 && remaining) {
                     size_t n = remaining > CHUNK ? CHUNK : (size_t)remaining;
-                    if (!pread_full(fd, in, n, (off_t)pos)) { rc = -1; break; }
+                    if (!pread_full(fd, in, n, (off_t)pos)) {
+                        snprintf(why, sizeof why, "read error at 0x%llx (%zu of %llu compressed bytes): %s",
+                                 (unsigned long long)pos, n, (unsigned long long)remaining, strerror(errno));
+                        ok = false; break;
+                    }
                     zs.next_in = in; zs.avail_in = (uInt)n; remaining -= n; pos += n;
                 }
                 zs.next_out = outb; zs.avail_out = CHUNK;
+                uInt in_before = zs.avail_in;
                 zr = inflate(&zs, Z_NO_FLUSH);
-                if (zr != Z_OK && zr != Z_STREAM_END) { rc = -1; break; }
                 size_t have = CHUNK - zs.avail_out;
-                c = crc32(c, outb, (uInt)have);
-                if (have && write(ofd, outb, have) != (ssize_t)have) { rc = -1; break; }
-                written += have;
+                if (have) {
+                    c = crc32(c, outb, (uInt)have);
+                    if (!write_full(ofd, outb, have)) {
+                        snprintf(why, sizeof why, "write error after %llu bytes: %s", (unsigned long long)written, strerror(errno));
+                        ok = false; break;
+                    }
+                    written += have;
+                }
+                if (zr == Z_STREAM_END) break;
+                if (zr != Z_OK) {
+                    if (zr == Z_BUF_ERROR && zs.avail_in == 0 && remaining == 0)
+                        snprintf(why, sizeof why, "truncated deflate stream (all %llu compressed bytes consumed, %llu of %llu bytes produced)",
+                                 (unsigned long long)csize, (unsigned long long)written, (unsigned long long)usize);
+                    else
+                        snprintf(why, sizeof why, "inflate: %s near compressed offset 0x%llx",
+                                 zlib_reason(zr), (unsigned long long)(pos - zs.avail_in));
+                    ok = false; break;
+                }
+                if (have == 0 && zs.avail_in == in_before && remaining == 0) {
+                    snprintf(why, sizeof why, "deflate stream ended early (%llu of %llu bytes produced)",
+                             (unsigned long long)written, (unsigned long long)usize);
+                    ok = false; break;
+                }
             }
             inflateEnd(&zs);
         }
-        close(ofd);
-        if (rc == 0 && (written != usize || c != crc)) { snprintf(err, errlen, "crc/size mismatch: %s", name); rc = -1; }
-        else if (rc != 0) snprintf(err, errlen, "extract failed: %s", name);
-        chmod(out, (mode & 0777) | 0600);
+        if (close(ofd) != 0 && ok) { snprintf(why, sizeof why, "close: %s", strerror(errno)); ok = false; }
+        if (ok && (written != usize || c != crc)) {
+            snprintf(err, errlen, "crc/size mismatch: %s (wrote %llu, expected %llu; crc 0x%08lx vs 0x%08x)",
+                     name, (unsigned long long)written, (unsigned long long)usize, (unsigned long)c, crc);
+            rc = -1;
+        } else if (!ok) {
+            unlink(out);
+            snprintf(err, errlen, "extract failed: %s (%s)", name, why[0] ? why : "unknown reason");
+            rc = -1;
+        } else {
+            chmod(out, (mode & 0777) | 0600);
+        }
     }
     free(in); free(outb); free(cd); close(fd);
     return rc;
