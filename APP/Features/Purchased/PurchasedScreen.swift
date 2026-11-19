@@ -50,7 +50,7 @@ final class PurchasedModel: ObservableObject {
             name: app.name,
             version: app.version,
             identifier: Int(app.id) ?? 0,
-            iconURL: app.iconURL,
+            iconURL: app.iconURL?.absoluteString,
             versionId: nil,
             price: nil,
             currency: nil
