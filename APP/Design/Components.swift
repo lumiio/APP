@@ -147,14 +147,14 @@ struct DIconButton: View {
                 .font(.system(size: size * 0.38, weight: .semibold))
                 .foregroundStyle(tint ?? p.text)
                 .frame(width: size, height: size)
-                .background(
-                    RoundedRectangle(cornerRadius: size / 2, style: .continuous)
-                        .fill(p.card)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: size / 2, style: .continuous)
-                        .strokeBorder(p.line, lineWidth: 1)
-                )
+                .background {
+                    if !theme.liquidGlassEnabled {
+                        Circle()
+                            .fill(p.card)
+                            .overlay(Circle().strokeBorder(p.line, lineWidth: 1))
+                    }
+                }
+                .glassCircle(enabled: theme.liquidGlassEnabled)
         }
         .buttonStyle(PressableStyle())
     }
@@ -377,8 +377,14 @@ struct DTitle: View {
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(p.text)
                             .frame(width: 30, height: 30)
-                            .background(Circle().fill(p.card))
-                            .overlay(Circle().strokeBorder(p.line, lineWidth: 1))
+                            .background {
+                                if !theme.liquidGlassEnabled {
+                                    Circle()
+                                        .fill(p.card)
+                                        .overlay(Circle().strokeBorder(p.line, lineWidth: 1))
+                                }
+                            }
+                            .glassCircle(enabled: theme.liquidGlassEnabled)
                     }
                     .buttonStyle(PressableStyle())
                     .padding(.trailing, 2)
@@ -508,5 +514,33 @@ struct DNote: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .foregroundStyle(isError ? p.danger : p.subtext)
+    }
+}
+
+struct DSwitch: View {
+    @EnvironmentObject private var theme: ThemeManager
+    @Environment(\.colorScheme) private var scheme
+
+    @Binding var isOn: Bool
+
+    var body: some View {
+        let p = Palette(theme, scheme)
+        Button {
+            Haptics.tap()
+            withAnimation(.easeOut(duration: 0.18)) { isOn.toggle() }
+        } label: {
+            ZStack(alignment: isOn ? .trailing : .leading) {
+                Capsule()
+                    .fill(isOn ? p.accent : p.fill)
+                    .frame(width: 46, height: 28)
+                    .overlay(Capsule().strokeBorder(p.line, lineWidth: isOn ? 0 : 1))
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 22, height: 22)
+                    .padding(.horizontal, 3)
+                    .shadow(color: Color.black.opacity(0.12), radius: 2, x: 0, y: 1)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }

@@ -1470,3 +1470,10 @@
 "settings_subtitle" = "账号、外观与应用数据";
 "sign_in" = "登录";
 "updated" = "更新时间";
+
+/* liquid glass */
+"effects" = "效果";
+"liquid_glass" = "液态玻璃";
+"liquid_glass_desc" = "标签栏与按钮上的折射、高光边缘和磨砂质感";
+"water_layer" = "水波层";
+"water_layer_desc" = "背景上缓慢流动的焦散光线";

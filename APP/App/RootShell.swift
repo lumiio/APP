@@ -37,7 +37,11 @@ struct RootShell: View {
     var body: some View {
         let p = Palette(theme, scheme)
         ZStack {
-            p.canvas.ignoresSafeArea()
+            if theme.liquidGlassEnabled {
+                LiquidGlassBackdrop()
+            } else {
+                p.canvas.ignoresSafeArea()
+            }
             content
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -86,13 +90,16 @@ struct RootShell: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 7)
+        .glassSurface(cornerRadius: 24, enabled: theme.liquidGlassEnabled)
         .background {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .strokeBorder(p.line, lineWidth: 1)
-                )
+            if !theme.liquidGlassEnabled {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(p.card)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .strokeBorder(p.line, lineWidth: 1)
+                    )
+            }
         }
         .padding(.horizontal, G.gutter)
         .padding(.top, 6)

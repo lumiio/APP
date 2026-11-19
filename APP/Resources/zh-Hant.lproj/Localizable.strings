@@ -1470,3 +1470,10 @@
 "settings_subtitle" = "帳號、外觀與應用程式資料";
 "sign_in" = "登入";
 "updated" = "更新時間";
+
+/* liquid glass */
+"effects" = "效果";
+"liquid_glass" = "液態玻璃";
+"liquid_glass_desc" = "標籤列與按鈕上的折射、高光邊緣和磨砂質感";
+"water_layer" = "水波層";
+"water_layer_desc" = "背景上緩慢流動的焦散光線";

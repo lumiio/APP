@@ -47,6 +47,26 @@ struct AppearanceScreen: View {
                     }
                 }
 
+                DSection(L("effects", "Effects")) {
+                    DCard {
+                        VStack(spacing: 14) {
+                            effectRow(
+                                L("liquid_glass", "Liquid Glass"),
+                                L("liquid_glass_desc", "Refraction, specular rim and frosted chrome on the tab bar and buttons"),
+                                isOn: $theme.liquidGlassEnabled,
+                                p
+                            )
+                            DHairline()
+                            effectRow(
+                                L("water_layer", "Water Layer"),
+                                L("water_layer_desc", "Slow caustic lines moving across the backdrop"),
+                                isOn: $theme.waterEffectEnabled,
+                                p
+                            )
+                        }
+                    }
+                }
+
                 DSection(L("accent_color", "Accent")) {
                     DCard {
                         VStack(alignment: .leading, spacing: 12) {
@@ -93,6 +113,22 @@ struct AppearanceScreen: View {
         }
         .appCanvas(p)
         .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private func effectRow(_ title: String, _ subtitle: String, isOn: Binding<Bool>, _ p: Palette) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(T.medium(14))
+                    .foregroundStyle(p.text)
+                Text(subtitle)
+                    .font(T.body(11))
+                    .foregroundStyle(p.subtext)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 10)
+            DSwitch(isOn: isOn)
+        }
     }
 
     private func hexString(_ color: Color) -> String {

@@ -1470,3 +1470,10 @@ Then retry the installation.";
 "settings_subtitle" = "Account, appearance and app data";
 "sign_in" = "Sign in";
 "updated" = "Updated";
+
+/* liquid glass */
+"effects" = "Effects";
+"liquid_glass" = "Liquid Glass";
+"liquid_glass_desc" = "Refraction, specular rim and frosted chrome on the tab bar and buttons";
+"water_layer" = "Water Layer";
+"water_layer_desc" = "Slow caustic lines moving across the backdrop";
