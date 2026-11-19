@@ -12,7 +12,6 @@
 		A1C000000000000000000001 /* AsyncHTTPClient in Frameworks */ = {isa = PBXBuildFile; productRef = A1C000000000000000000002 /* AsyncHTTPClient */; };
 		A1D100000000000000000002 /* APP/InAppPurchase.dylib in Copy InAppPurchase.dylib */ = {isa = PBXBuildFile; fileRef = A1D100000000000000000001 /* APP/InAppPurchase.dylib */; };
 		D50DBD7A600A5337B02DD11E /* SRP in Frameworks */ = {isa = PBXBuildFile; productRef = E2BFBE6BCBC4081A86D24867 /* SRP */; };
-		D5A1B2C3D4E5F60718293010 /* ZsignSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D5A1B2C3D4E5F60718293011 /* ZsignSwift */; };
 		D6A1B2C3D4E5F60718293001 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = D6A1B2C3D4E5F60718293002 /* GRDB */; };
 /* End PBXBuildFile section */
 
@@ -85,7 +84,6 @@
 				851F44E62FDDECA400574B00 /* Vapor in Frameworks */,
 				850E83352FEDA2C30047BDF8 /* Alamofire in Frameworks */,
 				D6A1B2C3D4E5F60718293001 /* GRDB in Frameworks */,
-				D5A1B2C3D4E5F60718293010 /* ZsignSwift in Frameworks */,
 				D50DBD7A600A5337B02DD11E /* SRP in Frameworks */,
 				A1C000000000000000000001 /* AsyncHTTPClient in Frameworks */,
 			);
@@ -145,7 +143,6 @@
 				851F44E52FDDECA400574B00 /* Vapor */,
 				850E83342FEDA2C30047BDF8 /* Alamofire */,
 				D6A1B2C3D4E5F60718293002 /* GRDB */,
-				D5A1B2C3D4E5F60718293011 /* ZsignSwift */,
 				E2BFBE6BCBC4081A86D24867 /* SRP */,
 			);
 			productName = APP;
@@ -215,7 +212,6 @@
 				955DE4CABD7624367200C85A /* XCRemoteSwiftPackageReference "swift-srp" */,
 				A1C000000000000000000003 /* XCRemoteSwiftPackageReference "async-http-client" */,
 				D6A1B2C3D4E5F60718293003 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
-				D5A1B2C3D4E5F60718293012 /* XCLocalSwiftPackageReference "Zsign" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 851FD9602E578774002136BA /* Products */;
@@ -518,13 +514,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		D5A1B2C3D4E5F60718293012 /* XCLocalSwiftPackageReference "Zsign" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = Zsign;
-		};
-/* End XCLocalSwiftPackageReference section */
-
 /* Begin XCRemoteSwiftPackageReference section */
 		850E83332FEDA2C30047BDF8 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -583,11 +572,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1C000000000000000000003 /* XCRemoteSwiftPackageReference "async-http-client" */;
 			productName = AsyncHTTPClient;
-		};
-		D5A1B2C3D4E5F60718293011 /* ZsignSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D5A1B2C3D4E5F60718293012 /* XCLocalSwiftPackageReference "Zsign" */;
-			productName = ZsignSwift;
 		};
 		D6A1B2C3D4E5F60718293002 /* GRDB */ = {
 			isa = XCSwiftPackageProductDependency;
