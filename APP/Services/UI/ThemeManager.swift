@@ -25,7 +25,6 @@ enum AppTheme: Int, CaseIterable {
         }
     }
 }
-@MainActor
 class ThemeManager: ObservableObject, @unchecked Sendable {
     static let shared = ThemeManager()
 

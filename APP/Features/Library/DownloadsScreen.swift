@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 struct DownloadsScreen: View {

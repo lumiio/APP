@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 @MainActor
@@ -149,7 +150,7 @@ struct PurchasedScreen: View {
 
     private func row(_ app: OwnedApp, _ p: Palette) -> some View {
         HStack(spacing: 12) {
-            DArtwork(url: app.iconURL, size: 52, radius: 13)
+            DArtwork(url: app.iconURL?.absoluteString, size: 52, radius: 13)
             VStack(alignment: .leading, spacing: 3) {
                 Text(app.name)
                     .font(T.medium(15))

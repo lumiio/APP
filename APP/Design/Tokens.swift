@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// Shared geometry. Everything on screen derives its spacing from here so the

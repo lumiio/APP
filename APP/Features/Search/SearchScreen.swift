@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 @MainActor
@@ -26,7 +27,8 @@ final class SearchModel: ObservableObject {
         current = Task { [weak self] in
             guard let self else { return }
             do {
-                let country = AppStore.this.selectedAccount?.countryCode ?? "us"
+                let raw = AppStore.this.selectedAccount?.countryCode ?? ""
+                let country = raw.trimmingCharacters(in: .whitespaces).isEmpty ? "us" : raw
                 let hits = try await iTunesClient.shared.search(
                     term: term,
                     limit: 40,
