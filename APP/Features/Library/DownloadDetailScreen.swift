@@ -16,10 +16,8 @@ struct DownloadDetailScreen: View {
         let p = Palette(theme, scheme)
         ScrollView {
             VStack(spacing: G.blockGap) {
-                if !AppChrome.usesSystemBars {
-                    DTitle(text: request.name, subtitle: request.bundleIdentifier, onBack: { dismiss() })
-                        .padding(.bottom, 2)
-                }
+                DTitle(text: request.name, subtitle: request.bundleIdentifier, onBack: { dismiss() })
+                    .padding(.bottom, 2)
 
                 headCard(p)
                 progressCard(p)
@@ -31,9 +29,7 @@ struct DownloadDetailScreen: View {
             .padding(.bottom, 30)
         }
         .appCanvas(p)
-        .adaptiveNavChrome()
-        .navigationTitle(request.name)
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .alert(L("delete_download", "Delete this download?"), isPresented: $confirmDelete) {
             Button("cancel".localized, role: .cancel) { }
             Button("delete".localized, role: .destructive) {

@@ -36,35 +36,19 @@ struct RootShell: View {
 
     var body: some View {
         let p = Palette(theme, scheme)
-        if #available(iOS 26.0, *), theme.liquidGlassEnabled {
-            // Official Liquid Glass: system tab bar and system navigation bars.
-            TabView(selection: $tab) {
-                SearchScreen()
-                    .tag(AppTab.search)
-                    .tabItem { Label(AppTab.search.title, systemImage: AppTab.search.symbol) }
-                PurchasedScreen()
-                    .tag(AppTab.purchased)
-                    .tabItem { Label(AppTab.purchased.title, systemImage: AppTab.purchased.symbol) }
-                DownloadsScreen()
-                    .tag(AppTab.downloads)
-                    .tabItem { Label(AppTab.downloads.title, systemImage: AppTab.downloads.symbol) }
-                SettingsScreen()
-                    .tag(AppTab.settings)
-                    .tabItem { Label(AppTab.settings.title, systemImage: AppTab.settings.symbol) }
+        ZStack {
+            if theme.liquidGlassEnabled {
+                LiquidGlassCanvas()
+            } else {
+                p.canvas.ignoresSafeArea()
             }
-            .tint(p.accent)
-        } else {
-            ZStack {
-                if theme.liquidGlassEnabled {
-                    LiquidGlassCanvas()
-                } else {
-                    p.canvas.ignoresSafeArea()
-                }
-                content
-            }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                tabBar(p)
-            }
+            content
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            tabBar(p)
+                .padding(.horizontal, G.gutter)
+                .padding(.top, 6)
+                .padding(.bottom, 4)
         }
     }
 
@@ -78,50 +62,64 @@ struct RootShell: View {
         }
     }
 
+    // MARK: - Tab bar
+
+    @ViewBuilder
     private func tabBar(_ p: Palette) -> some View {
-        HStack(spacing: 0) {
+        if #available(iOS 26.0, *), theme.liquidGlassEnabled {
+            GlassEffectContainer(spacing: 8) {
+                items(p)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 6)
+                    .glassEffect(.regular, in: Capsule(style: .continuous))
+            }
+        } else {
+            items(p)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 6)
+                .background {
+                    Capsule(style: .continuous)
+                        .fill(.ultraThinMaterial)
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .strokeBorder(p.line, lineWidth: 1)
+                        )
+                }
+                .shadow(color: Color.black.opacity(p.isDark ? 0.35 : 0.10), radius: 16, x: 0, y: 8)
+        }
+    }
+
+    private func items(_ p: Palette) -> some View {
+        HStack(spacing: 2) {
             ForEach(AppTab.allCases) { item in
                 let active = item == tab
                 Button {
                     guard tab != item else { return }
                     Haptics.tap()
-                    withAnimation(.easeOut(duration: 0.18)) { tab = item }
+                    withAnimation(.easeOut(duration: 0.16)) { tab = item }
                 } label: {
                     VStack(spacing: 3) {
                         Image(systemName: item.symbol)
                             .font(.system(size: 17, weight: active ? .semibold : .regular))
+                            .symbolVariant(active ? .fill : .none)
                         Text(item.title)
-                            .font(.system(size: 10, weight: active ? .semibold : .regular))
+                            .font(.system(size: 10.5, weight: active ? .semibold : .medium))
                     }
                     .foregroundStyle(active ? p.accent : p.subtext)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
                     .background {
                         if active {
-                            Capsule()
-                                .fill(p.accentSoft(0.13))
-                                .frame(width: 78, height: 40)
+                            Capsule(style: .continuous)
+                                .fill(p.accent.opacity(p.isDark ? 0.16 : 0.11))
+                                .padding(.horizontal, 2)
+                                .padding(.vertical, 1)
                         }
                     }
+                    .contentShape(Capsule(style: .continuous))
                 }
                 .buttonStyle(PressableStyle())
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 7)
-        .glassSurface(cornerRadius: 24, enabled: theme.liquidGlassEnabled)
-        .background {
-            if !theme.liquidGlassEnabled {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(p.card)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .strokeBorder(p.line, lineWidth: 1)
-                    )
-            }
-        }
-        .padding(.horizontal, G.gutter)
-        .padding(.top, 6)
-        .padding(.bottom, 2)
     }
 }

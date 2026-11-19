@@ -81,9 +81,7 @@ struct SearchScreen: View {
                 resultsArea(p)
             }
             .appCanvas(p)
-            .adaptiveNavChrome()
-            .navigationTitle("tab_search".localized)
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: iTunesSearchResult.self) { app in
                 AppDetailScreen(app: app)
             }
@@ -93,13 +91,11 @@ struct SearchScreen: View {
     private func header(_ p: Palette) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top) {
-                if !AppChrome.usesSystemBars {
-                    DTitle(
-                        text: "tab_search".localized,
-                        subtitle: store.selectedAccount.map { accountSubtitle($0) }
-                            ?? L("search_sign_in_hint", "Search works without an account; downloading needs one.")
-                    )
-                }
+                DTitle(
+                    text: "tab_search".localized,
+                    subtitle: store.selectedAccount.map { accountSubtitle($0) }
+                        ?? L("search_sign_in_hint", "Search works without an account; downloading needs one.")
+                )
                 Spacer(minLength: 8)
                 familySwitcher(p)
             }

@@ -44,9 +44,7 @@ struct DownloadsScreen: View {
                 }
             }
             .appCanvas(p)
-            .adaptiveNavChrome()
-            .navigationTitle("tab_downloads".localized)
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showDecrypt) {
                 DecryptScreen()
             }
@@ -55,9 +53,7 @@ struct DownloadsScreen: View {
 
     private func header(_ p: Palette) -> some View {
         HStack(alignment: .top) {
-            if !AppChrome.usesSystemBars {
-                DTitle(text: "tab_downloads".localized, subtitle: summary)
-            }
+            DTitle(text: "tab_downloads".localized, subtitle: summary)
             Spacer(minLength: 8)
             DIconButton(symbol: "waveform.path.ecg") {
                 Haptics.tap()

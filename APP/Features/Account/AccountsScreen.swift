@@ -14,13 +14,11 @@ struct AccountsScreen: View {
         let p = Palette(theme, scheme)
         ScrollView {
             VStack(alignment: .leading, spacing: G.blockGap) {
-                if !AppChrome.usesSystemBars {
-                    DTitle(
-                        text: L("account_management", "Accounts"),
-                        subtitle: L("accounts_subtitle", "Downloads always use the selected account"),
-                        onBack: { dismiss() }
-                    )
-                }
+                DTitle(
+                    text: L("account_management", "Accounts"),
+                    subtitle: L("accounts_subtitle", "Downloads always use the selected account"),
+                    onBack: { dismiss() }
+                )
 
                 if store.savedAccounts.isEmpty {
                     DEmpty(
@@ -45,9 +43,7 @@ struct AccountsScreen: View {
             .padding(.bottom, 30)
         }
         .appCanvas(p)
-        .adaptiveNavChrome()
-        .navigationTitle(L("account_management", "Accounts"))
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showAdd) {
             AddAccountScreen()
         }

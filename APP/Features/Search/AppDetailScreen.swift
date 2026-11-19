@@ -18,10 +18,8 @@ struct AppDetailScreen: View {
         let p = Palette(theme, scheme)
         ScrollView {
             VStack(spacing: G.blockGap) {
-                if !AppChrome.usesSystemBars {
-                    DTitle(text: app.trackName, subtitle: app.artistName ?? app.sellerName, onBack: { dismiss() })
-                        .padding(.bottom, 2)
-                }
+                DTitle(text: app.trackName, subtitle: app.artistName ?? app.sellerName, onBack: { dismiss() })
+                    .padding(.bottom, 2)
 
                 headlineCard(p)
                 actionArea(p)
@@ -34,9 +32,7 @@ struct AppDetailScreen: View {
             .padding(.bottom, 30)
         }
         .appCanvas(p)
-        .adaptiveNavChrome()
-        .navigationTitle(app.trackName)
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear(perform: syncQueueState)
     }
 

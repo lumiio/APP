@@ -10,13 +10,11 @@ struct AboutScreen: View {
     var body: some View {
         let p = Palette(theme, scheme)
         VStack(alignment: .leading, spacing: G.sectionGap) {
-            if !AppChrome.usesSystemBars {
-                DTitle(
-                    text: "about".localized,
-                    subtitle: L("about_subtitle", "App Store client for downloading your own purchases"),
-                    onBack: { dismiss() }
-                )
-            }
+            DTitle(
+                text: "about".localized,
+                subtitle: L("about_subtitle", "App Store client for downloading your own purchases"),
+                onBack: { dismiss() }
+            )
 
             DCard {
                 VStack(spacing: 0) {
@@ -52,9 +50,7 @@ struct AboutScreen: View {
         .padding(.top, G.headerTop)
         .padding(.bottom, 24)
         .appCanvas(p)
-        .adaptiveNavChrome()
-        .navigationTitle("about".localized)
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private func infoRow(_ label: String, _ value: String, _ p: Palette) -> some View {

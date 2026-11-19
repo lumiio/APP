@@ -11,13 +11,11 @@ struct LanguageScreen: View {
         let p = Palette(theme, scheme)
         ScrollView {
             VStack(alignment: .leading, spacing: G.blockGap) {
-                if !AppChrome.usesSystemBars {
-                    DTitle(
-                        text: L("language", "Language"),
-                        subtitle: L("language_subtitle", "Interface language, applied immediately"),
-                        onBack: { dismiss() }
-                    )
-                }
+                DTitle(
+                    text: L("language", "Language"),
+                    subtitle: L("language_subtitle", "Interface language, applied immediately"),
+                    onBack: { dismiss() }
+                )
                 DCard(padding: 0) {
                     VStack(spacing: 0) {
                         ForEach(Array(AppLanguage.allCases.enumerated()), id: \.element.id) { index, item in
@@ -53,8 +51,6 @@ struct LanguageScreen: View {
             .padding(.bottom, 30)
         }
         .appCanvas(p)
-        .adaptiveNavChrome()
-        .navigationTitle(L("language", "Language"))
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }

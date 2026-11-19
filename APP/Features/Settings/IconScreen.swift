@@ -20,13 +20,11 @@ struct IconScreen: View {
         let p = Palette(theme, scheme)
         ScrollView {
             VStack(alignment: .leading, spacing: G.blockGap) {
-                if !AppChrome.usesSystemBars {
-                    DTitle(
-                        text: L("icon", "App Icon"),
-                        subtitle: L("icon_subtitle", "Pick the icon shown on your home screen"),
-                        onBack: { dismiss() }
-                    )
-                }
+                DTitle(
+                    text: L("icon", "App Icon"),
+                    subtitle: L("icon_subtitle", "Pick the icon shown on your home screen"),
+                    onBack: { dismiss() }
+                )
 
                 let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
                 LazyVGrid(columns: columns, spacing: 12) {
@@ -49,9 +47,7 @@ struct IconScreen: View {
             .padding(.bottom, 30)
         }
         .appCanvas(p)
-        .adaptiveNavChrome()
-        .navigationTitle(L("icon", "App Icon"))
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private func optionCard(_ option: (key: String, title: String, asset: String), _ p: Palette) -> some View {
