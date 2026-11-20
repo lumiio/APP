@@ -39,9 +39,9 @@ enum FairPlayBridge {
 
     static func decryptTree(
         appDirectory: URL,
-        cancel: () -> Bool,
-        onEntry: (String, Int32) -> Void,
-        onLog: (String) -> Void
+        cancel: @escaping () -> Bool,
+        onEntry: @escaping (String, Int32) -> Void,
+        onLog: @escaping (String) -> Void
     ) throws -> TreeStats {
         final class Context {
             let cancel: () -> Bool
@@ -58,13 +58,12 @@ enum FairPlayBridge {
         }
 
         let context = Context(cancel: cancel, onEntry: onEntry, onLog: onLog)
-        var decrypted: Int32 = 0
         var failed: Int32 = 0
         var skipped: Int32 = 0
         var buffer = errorBuffer()
         let pointer = Unmanaged.passUnretained(context).toOpaque()
 
-        let status = withExtendedLifetime(context) { () -> Int32 in
+        let done: Int32 = withExtendedLifetime(context) { () -> Int32 in
             appDirectory.path.withCString { path in
                 fp_decrypt_tree(
                     path,
@@ -84,28 +83,23 @@ enum FairPlayBridge {
                         return context.cancel()
                     },
                     pointer,
-                    &decrypted,
-                    &skipped,
                     &failed,
+                    &skipped,
                     &buffer,
                     Int32(errorCapacity)
                 )
             }
         }
 
-        if status == -2 {
+        if done == -2 {
             throw DecryptError.cancelled
         }
-        if status < 0 {
+        if done < 0 {
             let detail = text(buffer)
             throw DecryptError.archive(detail.isEmpty ? "traversal failed" : detail)
         }
 
-        return TreeStats(
-            decrypted: Int(decrypted),
-            plain: Int(skipped),
-            failed: Int(failed)
-        )
+        return TreeStats(decrypted: Int(done), plain: Int(skipped), failed: Int(failed))
     }
 
     // MARK: - Probe
