@@ -100,6 +100,7 @@ struct AccountsScreen: View {
                         Haptics.tap()
                         store.switchToAccount(account)
                         store.persistSelectedIndex()
+                        dismiss()
                     } label: {
                         Text(L("switch", "Switch"))
                             .font(T.caption(12))
