@@ -539,7 +539,7 @@ struct SettingsScreen: View {
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(p.text)
                         .lineLimit(1)
-                    Text(verbatim: "\(Int(active.runtime.progress * 100))% · \(L("p_active", "下载中"))")
+                    Text(verbatim: "\(Int(active.runtime.progressValue * 100))% · \(L("p_active", "下载中"))")
                         .font(.system(size: 11))
                         .foregroundStyle(p.subtext)
                 }
@@ -630,7 +630,7 @@ enum HomeTab: String, CaseIterable, Identifiable {
         }
     }
 
-    func count(purchased: PurchasedModel, downloads: UnifiedDownloadManager) -> Int? {
+    @MainActor func count(purchased: PurchasedModel, downloads: UnifiedDownloadManager) -> Int? {
         switch self {
         case .owned: return purchased.apps.count
         case .downloads: return downloads.downloadRequests.count
