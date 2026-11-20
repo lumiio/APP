@@ -17,25 +17,16 @@ struct SettingsScreen: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var language: LanguageManager
     @EnvironmentObject private var purchased: PurchasedModel
-    @EnvironmentObject private var downloads: UnifiedDownloadManager
     @Environment(\.colorScheme) private var scheme
 
     @State private var path: [SettingsRoute] = []
-    @State private var showAddAccount = false
 
     var body: some View {
         let p = Palette(theme, scheme)
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(spacing: 12) {
-                    topIcons(p)
                     identityCard(p)
-                    infoRow(
-                        symbol: "doc.text",
-                        title: L("completion", "资料完成度") + " \(completionPercent)%",
-                        detail: L("improve", "去完善"),
-                        p: p
-                    ) { path.append(.accounts) }
 
                     infoRow(
                         symbol: "star",
@@ -50,9 +41,6 @@ struct SettingsScreen: View {
             }
             .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                actionBar(p)
-            }
             .navigationDestination(for: SettingsRoute.self) { route in
                 switch route {
                 case .accounts: AccountsScreen()
@@ -62,37 +50,7 @@ struct SettingsScreen: View {
                 case .about: AboutScreen()
                 }
             }
-            .sheet(isPresented: $showAddAccount) {
-                AddAccountScreen()
-            }
         }
-    }
-
-    // MARK: - Top icon row
-
-    private func topIcons(_ p: Palette) -> some View {
-        HStack(spacing: 10) {
-            Spacer(minLength: 0)
-            circleButton("qrcode", p) { path.append(.about) }
-            circleButton("bell", p) { path.append(.language) }
-            circleButton("gearshape", p) { path.append(.appearance) }
-        }
-        .padding(.horizontal, 18)
-        .padding(.top, 6)
-    }
-
-    private func circleButton(_ symbol: String, _ p: Palette, action: @escaping () -> Void) -> some View {
-        Button {
-            Haptics.tap()
-            action()
-        } label: {
-            Image(systemName: symbol)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(p.subtext)
-                .frame(width: 34, height: 34)
-                .background(Circle().fill(Color(uiColor: .tertiarySystemFill)))
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Identity card
@@ -103,38 +61,18 @@ struct SettingsScreen: View {
                 avatar(p)
 
                 VStack(alignment: .leading, spacing: 7) {
-                    HStack(spacing: 7) {
-                        Text(displayName)
-                            .font(.system(size: 25, weight: .bold))
-                            .foregroundStyle(p.text)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                        statusChip(p)
-                    }
-                    HStack(spacing: 7) {
-                        Text(roleLine)
-                            .font(.system(size: 14))
-                            .foregroundStyle(p.subtext)
-                            .lineLimit(1)
-                        idChip(p)
-                    }
+                    Text(displayName)
+                        .font(.system(size: 25, weight: .bold))
+                        .foregroundStyle(p.text)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text(roleLine)
+                        .font(.system(size: 14))
+                        .foregroundStyle(p.subtext)
+                        .lineLimit(1)
                 }
 
                 Spacer(minLength: 4)
-
-                Button {
-                    Haptics.tap()
-                    path.append(.accounts)
-                } label: {
-                    VStack(spacing: 3) {
-                        Image(systemName: "hand.thumbsup")
-                            .font(.system(size: 17, weight: .regular))
-                        Text("\(purchased.apps.count)")
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                    .foregroundStyle(p.text)
-                }
-                .buttonStyle(.plain)
             }
 
             Button {
@@ -152,26 +90,6 @@ struct SettingsScreen: View {
                         .foregroundStyle(p.muted)
                 }
                 .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            Button {
-                Haptics.tap()
-                path.append(.language)
-            } label: {
-                HStack(spacing: 5) {
-                    Text(L("add_tag", "添加标签"))
-                        .font(.system(size: 13))
-                    Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .semibold))
-                }
-                .foregroundStyle(p.subtext)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .overlay(
-                    Capsule(style: .continuous)
-                        .strokeBorder(p.line, lineWidth: 1)
-                )
             }
             .buttonStyle(.plain)
         }
@@ -208,38 +126,6 @@ struct SettingsScreen: View {
         }
         .frame(width: 84, height: 84)
         .overlay(Circle().strokeBorder(Color.white.opacity(0.9), lineWidth: 2))
-    }
-
-    private func statusChip(_ p: Palette) -> some View {
-        HStack(spacing: 3) {
-            Image(systemName: "face.smiling")
-                .font(.system(size: 10, weight: .semibold))
-            Text(L("status", "状态"))
-                .font(.system(size: 11, weight: .medium))
-        }
-        .foregroundStyle(p.text)
-        .padding(.horizontal, 7)
-        .padding(.vertical, 3)
-        .background(
-            Capsule(style: .continuous)
-                .fill(Color(uiColor: .tertiarySystemFill))
-        )
-    }
-
-    private func idChip(_ p: Palette) -> some View {
-        HStack(spacing: 3) {
-            Text(L("id", "ID"))
-                .font(.system(size: 11, weight: .semibold))
-            Image(systemName: "chevron.right")
-                .font(.system(size: 9, weight: .semibold))
-        }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
-        .background(
-            Capsule(style: .continuous)
-                .fill(Color(uiColor: .systemGray2))
-        )
     }
 
     // MARK: - Flat rows
@@ -342,44 +228,6 @@ struct SettingsScreen: View {
         .contentShape(Rectangle())
     }
 
-    // MARK: - Bottom action bar
-
-    private func actionBar(_ p: Palette) -> some View {
-        HStack(spacing: 10) {
-            barButton(L("appearance", "外观"), p, filled: false) { path.append(.appearance) }
-            barButton(L("language", "语言"), p, filled: false) { path.append(.language) }
-            barButton(store.selectedAccount == nil ? "add_account".localized : L("account_management", "账号"), p, filled: true) {
-                if store.selectedAccount == nil { showAddAccount = true } else { path.append(.accounts) }
-            }
-        }
-        .padding(.horizontal, 14)
-        .padding(.top, 8)
-        .padding(.bottom, 6)
-        .background(Color(uiColor: .systemGroupedBackground).opacity(0.95))
-    }
-
-    private func barButton(_ title: String, _ p: Palette, filled: Bool, action: @escaping () -> Void) -> some View {
-        Button {
-            Haptics.tap()
-            action()
-        } label: {
-            Text(title)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(filled ? Color.white : p.text)
-                .frame(maxWidth: .infinity)
-                .frame(height: 46)
-                .background(
-                    RoundedRectangle(cornerRadius: 23, style: .continuous)
-                        .fill(filled ? p.accent : Color(uiColor: .secondarySystemGroupedBackground))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 23, style: .continuous)
-                        .strokeBorder(filled ? Color.clear : p.line, lineWidth: filled ? 0 : 1)
-                )
-        }
-        .buttonStyle(.plain)
-    }
-
     // MARK: - Data
 
     private var displayName: String {
@@ -407,14 +255,6 @@ struct SettingsScreen: View {
 
     private var signLine: String {
         L("profile_slogan", "下载、解密、归档，全在本地。")
-    }
-
-    private var completionPercent: Int {
-        var score = 0
-        if store.selectedAccount != nil { score += 40 }
-        if purchased.apps.count > 0 { score += 30 }
-        if downloads.downloadRequests.count > 0 { score += 30 }
-        return min(score, 100)
     }
 
     private var iconDetail: String {
