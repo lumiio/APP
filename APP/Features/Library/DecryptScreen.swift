@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 @MainActor
 final class DecryptRunner: ObservableObject {
@@ -12,6 +13,7 @@ final class DecryptRunner: ObservableObject {
     @Published private(set) var total = 0
 
     private var cancelToken: DecryptCancelToken?
+    private var keepAlive: UIBackgroundTaskIdentifier = .invalid
 
     func run(path: String, name: String) async {
         guard !running else { return }
@@ -30,6 +32,9 @@ final class DecryptRunner: ObservableObject {
             Task { @MainActor [weak self] in self?.apply(event) }
         }
 
+        LiveActivityController.shared.showDecrypt(name: name, phase: .prepare, fraction: 0, processed: 0, total: 0)
+        beginKeepAlive()
+
         do {
             let result = try await DecryptEngine.decrypt(
                 url: URL(fileURLWithPath: path),
@@ -38,17 +43,33 @@ final class DecryptRunner: ObservableObject {
             )
             DecryptStore.shared.upsert(DecryptRecord(result: result, sourcePath: path))
             notice = DecryptRecord(result: result, sourcePath: path).message
+            LiveActivityController.shared.finishDecrypt(name: name, success: true, message: notice)
             Haptics.success()
         } catch {
             let record = DecryptRecord(failure: error.localizedDescription, sourcePath: path)
             DecryptStore.shared.upsert(record)
             notice = record.message
+            LiveActivityController.shared.finishDecrypt(name: name, success: false, message: record.message)
             Haptics.warning()
         }
 
+        endKeepAlive()
         workingName = nil
         running = false
         cancelToken = nil
+    }
+
+    private func beginKeepAlive() {
+        endKeepAlive()
+        keepAlive = UIApplication.shared.beginBackgroundTask(withName: "APP.decrypt") { [weak self] in
+            Task { @MainActor in self?.endKeepAlive() }
+        }
+    }
+
+    private func endKeepAlive() {
+        guard keepAlive != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(keepAlive)
+        keepAlive = .invalid
     }
 
     func cancel() {
@@ -59,15 +80,28 @@ final class DecryptRunner: ObservableObject {
         switch event {
         case .phase(let value):
             phase = value
+            pushActivity()
         case .log:
             break
         case .progress(let done, let count):
             processed = done
             total = count
             fraction = count > 0 ? min(1, Double(done) / Double(count)) : 0
+            pushActivity()
         case .failedEntry:
             break
         }
+    }
+
+    private func pushActivity() {
+        guard let name = workingName else { return }
+        LiveActivityController.shared.showDecrypt(
+            name: name,
+            phase: phase,
+            fraction: fraction,
+            processed: processed,
+            total: total
+        )
     }
 }
 

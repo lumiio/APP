@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1E200000000000000000004 /* APPWidgets.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = A1E200000000000000000003 /* APPWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		850E83352FEDA2C30047BDF8 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 850E83342FEDA2C30047BDF8 /* Alamofire */; };
 		851F44E62FDDECA400574B00 /* Vapor in Frameworks */ = {isa = PBXBuildFile; productRef = 851F44E52FDDECA400574B00 /* Vapor */; };
 		A1C000000000000000000001 /* AsyncHTTPClient in Frameworks */ = {isa = PBXBuildFile; productRef = A1C000000000000000000002 /* AsyncHTTPClient */; };
@@ -16,6 +17,17 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		A1E200000000000000000005 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A1E200000000000000000004 /* APPWidgets.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		85B1AA9B2F00000000D00002 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -50,11 +62,19 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A1E200000000000000000003 /* APPWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = APPWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		851FD95F2E578774002136BA /* APP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = APP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1D100000000000000000001 /* APP/InAppPurchase.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "APP/InAppPurchase.dylib"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A1E200000000000000000002 /* Exceptions for "APPWidgets" folder in "APPWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A1E200000000000000000006 /* APPWidgets */;
+		};
 		A1C100000000000000000001 /* Exceptions for "APP" folder in "APP" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -66,6 +86,14 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		A1E200000000000000000001 /* APPWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A1E200000000000000000002 /* Exceptions for "APPWidgets" folder in "APPWidgets" target */,
+			);
+			path = APPWidgets;
+			sourceTree = "<group>";
+		};
 		851FD9612E578774002136BA /* APP */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -86,6 +114,13 @@
 				D6A1B2C3D4E5F60718293001 /* GRDB in Frameworks */,
 				D50DBD7A600A5337B02DD11E /* SRP in Frameworks */,
 				A1C000000000000000000001 /* AsyncHTTPClient in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1E200000000000000000008 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,6 +155,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		A1E200000000000000000006 /* APPWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1E20000000000000000000A /* Build configuration list for PBXNativeTarget "APPWidgets" */;
+			buildPhases = (
+				A1E200000000000000000007 /* Sources */,
+				A1E200000000000000000008 /* Frameworks */,
+				A1E200000000000000000009 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A1E200000000000000000001 /* APPWidgets */,
+			);
+			name = APPWidgets;
+			packageProductDependencies = (
+			);
+			productName = APPWidgets;
+			productReference = A1E200000000000000000003 /* APPWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		851FD95E2E578774002136BA /* APP */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 851FD96A2E578775002136BA /* Build configuration list for PBXNativeTarget "APP" */;
@@ -130,10 +187,12 @@
 				85B1AA9B2F00000000D00002 /* Copy Files */,
 				85B1AAC02F00000000D0000C /* Copy libiosexec to App Root */,
 				A1D100000000000000000003 /* Copy InAppPurchase.dylib */,
+				A1E200000000000000000005 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A1E20000000000000000000D /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				851FD9612E578774002136BA /* APP */,
@@ -162,6 +221,9 @@
 					851FD95E2E578774002136BA = {
 						CreatedOnToolsVersion = 16.4;
 						LastSwiftMigration = 1640;
+					};
+					A1E200000000000000000006 = {
+						CreatedOnToolsVersion = 16.4;
 					};
 				};
 			};
@@ -219,12 +281,20 @@
 			projectRoot = "";
 			targets = (
 				851FD95E2E578774002136BA /* APP */,
+				A1E200000000000000000006 /* APPWidgets */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		851FD95D2E578774002136BA /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1E200000000000000000009 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -241,8 +311,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A1E200000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+		A1E20000000000000000000E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 851FD9572E578774002136BA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1E200000000000000000006;
+			remoteInfo = APPWidgets;
+		};
+		A1E20000000000000000000D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1E200000000000000000006 /* APPWidgets */;
+			targetProxy = A1E20000000000000000000E /* PBXContainerItemProxy */;
+		};
 /* Begin XCBuildConfiguration section */
 		851FD9682E578775002136BA /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -491,6 +580,61 @@
 			};
 			name = Release;
 		};
+		A1E20000000000000000000B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TWLNU7NXWY;
+				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = Info.plist;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = APPWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.7.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pxx917144686.App.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A1E20000000000000000000C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = TWLNU7NXWY;
+				ENABLE_PREVIEWS = YES;
+				EXCLUDED_SOURCE_FILE_NAMES = Info.plist;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = APPWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.7.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pxx917144686.App.Widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -508,6 +652,15 @@
 			buildConfigurations = (
 				851FD96B2E578775002136BA /* Debug */,
 				851FD96C2E578775002136BA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1E20000000000000000000A /* Build configuration list for PBXNativeTarget "APPWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1E20000000000000000000B /* Debug */,
+				A1E20000000000000000000C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

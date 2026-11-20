@@ -711,6 +711,7 @@ class DownloadRequest: Identifiable, ObservableObject, Equatable, @unchecked Sen
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.objectWillChange.send()
+                Task { @MainActor in LiveActivityController.shared.syncDownloads() }
             }
             .store(in: &cancellables)
     }
