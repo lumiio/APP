@@ -25,9 +25,22 @@ struct SettingsScreen: View {
         let p = Palette(theme, scheme)
         NavigationStack {
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 18) {
                     identityCard(p)
-                    settingsCard(p)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L("group_general", "通用"))
+                            .font(T.caption(12))
+                            .foregroundStyle(p.muted)
+                            .padding(.leading, 4)
+                        settingsCard(p)
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L("group_about", "关于"))
+                            .font(T.caption(12))
+                            .foregroundStyle(p.muted)
+                            .padding(.leading, 4)
+                        aboutCard(p)
+                    }
                     footer(p)
                 }
                 .padding(.horizontal, 16)
@@ -166,23 +179,35 @@ struct SettingsScreen: View {
             NavigationLink(value: SettingsRoute.icon) {
                 row(p, symbol: "app.badge", title: L("icon", "图标"), detail: iconDetail)
             }
-            hairline(p)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color(uiColor: .secondarySystemGroupedBackground))
+        )
+    }
+
+    private func aboutCard(_ p: Palette) -> some View {
+        VStack(spacing: 0) {
             NavigationLink(value: SettingsRoute.about) {
                 row(p, symbol: "info.circle", title: L("about", "关于"), detail: appVersion)
             }
         }
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(Color(uiColor: .secondarySystemGroupedBackground))
         )
     }
 
     private func row(_ p: Palette, symbol: String, title: String, detail: String) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: symbol)
-                .font(.system(size: 15))
-                .foregroundStyle(p.subtext)
-                .frame(width: 24)
+            ZStack {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(p.accentSoft(0.13))
+                Image(systemName: symbol)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(p.accent)
+            }
+            .frame(width: 28, height: 28)
             Text(title)
                 .font(T.body(15))
                 .foregroundStyle(p.text)
@@ -195,13 +220,13 @@ struct SettingsScreen: View {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(p.muted)
         }
-        .padding(.horizontal, 16)
-        .frame(height: 50)
+        .padding(.horizontal, 14)
+        .frame(height: 56)
         .contentShape(Rectangle())
     }
 
     private func hairline(_ p: Palette) -> some View {
-        Rectangle().fill(p.line).frame(height: 0.5).padding(.leading, 52)
+        Rectangle().fill(p.line).frame(height: 0.5).padding(.leading, 54)
     }
 
     private func footer(_ p: Palette) -> some View {

@@ -21,10 +21,23 @@ struct AccountsScreen: View {
                         message: L("accounts_empty_hint", "Add an Apple ID to get started.")
                     )
                 } else {
-                    VStack(spacing: 10) {
-                        ForEach(store.savedAccounts) { account in
-                            accountRow(account, p)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(L("group_accounts", "Apple ID"))
+                            .font(T.caption(12))
+                            .foregroundStyle(p.muted)
+                            .padding(.leading, 4)
+                        VStack(spacing: 0) {
+                            ForEach(Array(store.savedAccounts.enumerated()), id: \.element.id) { index, account in
+                                accountRow(account, p)
+                                if index < store.savedAccounts.count - 1 {
+                                    Rectangle().fill(p.line).frame(height: 0.5).padding(.leading, 58)
+                                }
+                            }
                         }
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                        )
                     }
                 }
 
@@ -33,14 +46,14 @@ struct AccountsScreen: View {
                 }
 
                 if store.savedAccounts.count == 1 {
-                    DNote(text: L("switch_account_hint", "Add a second Apple ID to switch between accounts here."))
+                    DNote(text: L("switch_account_hint", "再加一个 Apple ID 就能在这里切换。"))
                 } else if store.savedAccounts.count > 1 {
-                    DNote(text: L("switch_account_hint2", "Tap Switch on any account to make it the active one. Downloads and purchases use it."))
+                    DNote(text: L("switch_account_hint2", "点任意账号即可切换为当前账号，下载和购买都使用它。"))
                 }
             }
-            .padding(.horizontal, G.gutter)
-            .padding(.top, G.headerTop)
-            .padding(.bottom, 30)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 24)
         }
         .appCanvas(p)
         .navigationTitle(L("account_management", "Accounts"))
@@ -67,46 +80,51 @@ struct AccountsScreen: View {
 
     private func accountRow(_ account: Account, _ p: Palette) -> some View {
         let selected = store.selectedAccount?.email == account.email
-        return DCard(padding: 14) {
+        return Button {
+            guard !selected else { return }
+            Haptics.tap()
+            store.switchToAccount(account)
+            store.persistSelectedIndex()
+            dismiss()
+        } label: {
             HStack(spacing: 12) {
                 ZStack {
                     Circle().fill(selected ? p.accentSoft(0.16) : p.fill)
                     Text(String(account.email.prefix(1)).uppercased())
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(selected ? p.accent : p.subtext)
                 }
-                .frame(width: 38, height: 38)
+                .frame(width: 34, height: 34)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text(account.email)
                         .font(T.medium(14))
                         .foregroundStyle(p.text)
                         .lineLimit(1)
+                        .truncationMode(.middle)
                     HStack(spacing: 6) {
                         if !account.countryCode.isEmpty {
-                            DChip(text: account.countryCode.uppercased())
+                            Text(account.countryCode.uppercased())
+                                .font(T.caption(11))
+                                .foregroundStyle(p.subtext)
                         }
                         if selected {
-                            Text(L("selected", "Selected"))
-                                .font(.system(size: 10, weight: .medium))
+                            Text(L("selected", "当前"))
+                                .font(T.caption(11))
                                 .foregroundStyle(p.accent)
                         }
                     }
                 }
-                Spacer(minLength: 6)
+                Spacer(minLength: 8)
 
-                if !selected {
-                    Button {
-                        Haptics.tap()
-                        store.switchToAccount(account)
-                        store.persistSelectedIndex()
-                        dismiss()
-                    } label: {
-                        Text(L("switch", "Switch"))
-                            .font(T.caption(12))
-                            .foregroundStyle(p.accent)
-                    }
-                    .buttonStyle(.plain)
+                if selected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 17))
+                        .foregroundStyle(p.accent)
+                } else {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(p.muted)
                 }
 
                 Button {
@@ -116,11 +134,15 @@ struct AccountsScreen: View {
                     Image(systemName: "trash")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(p.muted)
-                        .frame(width: 30, height: 30)
+                        .frame(width: 28, height: 28)
                 }
                 .buttonStyle(.plain)
             }
+            .padding(.horizontal, 14)
+            .frame(height: 58)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 }
 
