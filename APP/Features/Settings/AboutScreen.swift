@@ -23,6 +23,35 @@ struct AboutScreen: View {
             }
 
             DCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 8) {
+                        Text(L("live_activity_title", "实时活动"))
+                            .font(T.medium(14))
+                            .foregroundStyle(p.text)
+                        Spacer(minLength: 6)
+                        Text(LiveActivityController.shared.statusText)
+                            .font(T.body(12))
+                            .foregroundStyle(LiveActivityController.shared.supported ? p.subtext : p.danger)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    Text(L("live_activity_note", "下载和脱壳的进度会显示在灵动岛与锁屏上。若没有反应，先在这里跑一次测试。"))
+                        .font(T.body(11))
+                        .foregroundStyle(p.muted)
+                        .lineSpacing(2)
+                    Button {
+                        Haptics.tap()
+                        LiveActivityController.shared.startDemo()
+                    } label: {
+                        Text(L("live_activity_test", "测试灵动岛"))
+                            .font(T.caption(12))
+                            .foregroundStyle(p.accent)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            DCard {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(L("about_scope_title", "What it does"))
                         .font(T.medium(14))

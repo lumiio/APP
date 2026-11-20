@@ -51,5 +51,8 @@ struct RootShell: View {
                 .tag(AppTab.settings)
         }
         .tint(p.accent)
+        .onAppear {
+            Task { @MainActor in LiveActivityController.shared.syncDownloads() }
+        }
     }
 }

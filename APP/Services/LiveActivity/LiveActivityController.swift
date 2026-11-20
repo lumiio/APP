@@ -12,8 +12,17 @@ final class LiveActivityController {
     private var lastPush = Date.distantPast
     private var pendingWork: DispatchWorkItem?
     private var lastQueued: DeskTaskAttributes.ContentState?
+    private(set) var lastError: String?
 
     private init() {}
+
+    /// Human readable state, surfaced in About so a broken install is visible.
+    var statusText: String {
+        if !supported { return "实时活动未开启（系统设置里允许本 App 的实时活动）" }
+        if let lastError { return lastError }
+        if activity != nil { return "运行中" }
+        return "已就绪"
+    }
 
     var supported: Bool {
         ActivityAuthorizationInfo().areActivitiesEnabled
@@ -129,9 +138,11 @@ final class LiveActivityController {
                     pushType: nil
                 )
                 currentKind = kind
+                lastError = nil
                 lastPush = Date()
                 return
             } catch {
+                lastError = "无法创建实时活动：\(error.localizedDescription)"
                 return
             }
         }
@@ -174,6 +185,35 @@ final class LiveActivityController {
         lastQueued = nil
         lastPush = .distantPast
         show(state, kind: currentKind ?? .download)
+    }
+
+    /// Drives a fake task for ~20 seconds so the Dynamic Island can be verified.
+    func startDemo() {
+        guard supported else {
+            lastError = "实时活动不可用"
+            return
+        }
+        endSilently()
+        lastError = nil
+        runDemoStep(0)
+    }
+
+    private func runDemoStep(_ step: Int) {
+        guard step <= 20 else { return }
+        show(
+            DeskTaskAttributes.ContentState(
+                title: "灵动岛测试",
+                subtitle: "下载 · APP 2.7.1",
+                progress: min(1, Double(step) / 20),
+                detail: "第 \(step) 步 / 20 · 测试进度显示",
+                kind: DeskTaskKind.download.rawValue,
+                done: false
+            ),
+            kind: .download
+        )
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+            self?.runDemoStep(step + 1)
+        }
     }
 
     private func endSilently() {
