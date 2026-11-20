@@ -549,9 +549,9 @@ struct SettingsScreen: View {
                 Button {
                     Haptics.tap()
                     if active.runtime.status == .downloading {
-                        downloads.pauseDownload(active)
+                        downloads.pauseDownload(request: active)
                     } else {
-                        downloads.resumeDownload(active)
+                        downloads.resumeDownload(request: active)
                     }
                 } label: {
                     Image(systemName: active.runtime.status == .downloading ? "pause.fill" : "play.fill")
