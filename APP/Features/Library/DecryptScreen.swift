@@ -6,18 +6,68 @@ final class DecryptRunner: ObservableObject {
     @Published private(set) var running = false
     @Published private(set) var workingName: String?
     @Published private(set) var notice: String?
+    @Published private(set) var phase: DecryptPhase = .prepare
+    @Published private(set) var fraction: Double = 0
+    @Published private(set) var processed = 0
+    @Published private(set) var total = 0
+
+    private var cancelToken: DecryptCancelToken?
 
     func run(path: String, name: String) async {
         guard !running else { return }
         running = true
         workingName = name
         notice = nil
-        let record = await DecryptService.decryptFull(ipaPath: path)
-        DecryptStore.shared.upsert(record)
-        notice = record.message
+        fraction = 0
+        processed = 0
+        total = 0
+        phase = .prepare
+
+        let token = DecryptCancelToken()
+        cancelToken = token
+
+        let emit: @Sendable (DecryptEvent) -> Void = { [weak self] event in
+            Task { @MainActor [weak self] in self?.apply(event) }
+        }
+
+        do {
+            let result = try await DecryptEngine.decrypt(
+                url: URL(fileURLWithPath: path),
+                cancel: token,
+                progress: emit
+            )
+            DecryptStore.shared.upsert(DecryptRecord(result: result, sourcePath: path))
+            notice = DecryptRecord(result: result, sourcePath: path).message
+            Haptics.success()
+        } catch {
+            let record = DecryptRecord(failure: error.localizedDescription, sourcePath: path)
+            DecryptStore.shared.upsert(record)
+            notice = record.message
+            Haptics.warning()
+        }
+
         workingName = nil
         running = false
-        if record.isCompleted { Haptics.success() } else { Haptics.warning() }
+        cancelToken = nil
+    }
+
+    func cancel() {
+        cancelToken?.cancel()
+    }
+
+    private func apply(_ event: DecryptEvent) {
+        switch event {
+        case .phase(let value):
+            phase = value
+        case .log:
+            break
+        case .progress(let done, let count):
+            processed = done
+            total = count
+            fraction = count > 0 ? min(1, Double(done) / Double(count)) : 0
+        case .failedEntry:
+            break
+        }
     }
 }
 
@@ -72,7 +122,7 @@ struct DecryptScreen: View {
     }
 
     private var runnersAvailable: Bool {
-        FairPlayDecryptor.isAvailable
+        DecryptEngine.isAvailable
     }
 
     private func sheetHeader(_ p: Palette) -> some View {
@@ -167,8 +217,14 @@ struct DecryptScreen: View {
     }
 
     private var runningTitle: String {
-        if let name = runner.workingName { return name }
-        return L("decrypt_start", "Start decryption")
+        guard let name = runner.workingName else {
+            return L("decrypt_start", "开始解密")
+        }
+        if runner.total > 0 {
+            let percent = Int(runner.fraction * 100)
+            return "\(name) · \(runner.phase.label) \(percent)%"
+        }
+        return "\(name) · \(runner.phase.label)"
     }
 
     private func startDecrypt() {
