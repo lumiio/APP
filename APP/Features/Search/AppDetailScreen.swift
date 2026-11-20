@@ -316,7 +316,7 @@ struct AppDetailScreen: View {
     private static func versionsByBundleID(_ bundleId: String, region: String) async -> [StoreAppVersion] {
         for code in (region.uppercased() == "US" ? ["US"] : [region, "US"]) {
             guard let results = try? await iTunesClient.shared.search(term: bundleId, limit: 5, countryCode: code) else { continue }
-            if let hit = results?.first(where: { $0.bundleId.caseInsensitiveCompare(bundleId) == .orderedSame }), hit.trackId > 0,
+            if let hit = results.first(where: { $0.bundleId.caseInsensitiveCompare(bundleId) == .orderedSame }), hit.trackId > 0,
                let infos = try? await iTunesClient.shared.versionHistory(id: hit.trackId, country: code), !infos.isEmpty {
                 return infos.map { info in
                     StoreAppVersion(versionString: info.version, versionId: "", isCurrent: false, releaseDate: info.releaseDate, releaseNotes: info.releaseNotes)
