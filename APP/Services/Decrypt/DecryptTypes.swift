@@ -51,7 +51,7 @@ enum DecryptError: LocalizedError {
     case noAppBundle
     case badInfoPlist
     case packFailed(String)
-    case notDecryptable
+    case notDecryptable(String)
     case cancelled
 
     var errorDescription: String? {
@@ -72,8 +72,9 @@ enum DecryptError: LocalizedError {
             return L("dc_err_plist", "Info.plist 读取失败")
         case .packFailed(let detail):
             return L("dc_err_copy", "打包失败") + (detail.isEmpty ? "" : "（\(detail)）")
-        case .notDecryptable:
-            return L("dc_err_not_decryptable", "主二进制被 FairPlay 拒绝，无法解密")
+        case .notDecryptable(let detail):
+            let base = L("dc_err_not_decryptable", "主二进制被 FairPlay 拒绝，无法解密")
+            return detail.isEmpty ? base : base + "（\(detail)）"
         case .cancelled:
             return L("dc_err_cancelled", "已取消")
         }

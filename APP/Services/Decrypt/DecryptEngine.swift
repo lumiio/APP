@@ -72,15 +72,20 @@ enum DecryptEngine {
 
         emit?(.phase(.decrypt))
         var processed = 0
+        var failureLine: String?
         let stats = try FairPlayBridge.decryptTree(
             appDirectory: bundle,
             cancel: { cancel?.isCancelled ?? false },
             onEntry: { path, status in
                 processed += 1
                 emit?(.progress(processed: processed, total: binaries.count))
-                if status < 0 { emit?(.failedEntry(path)) }
+                if status < 0 {
+                    emit?(.failedEntry(path))
+                    if failureLine == nil { failureLine = "\(path.lastPathComponent) 解密失败" }
+                }
             },
             onLog: { line in
+                if failureLine == nil, line.contains("mremap=") { failureLine = line }
                 emit?(.log(line))
             }
         )
@@ -88,7 +93,7 @@ enum DecryptEngine {
 
         if stats.decrypted == 0 && stats.failed > 0 {
             emit?(.log("main binary rejected by FairPlay"))
-            throw DecryptError.notDecryptable
+            throw DecryptError.notDecryptable(failureLine.map(Self.shortReason) ?? "")
         }
 
         // Nothing was encrypted: keep the original archive byte for byte.
@@ -139,6 +144,16 @@ enum DecryptEngine {
             outputURL: output,
             duration: Date().timeIntervalSince(started)
         )
+    }
+
+    /// Trims the verbose C log down to the parts that explain the refusal.
+    private static func shortReason(_ line: String) -> String {
+        if let range = line.range(of: "mremap=") {
+            let tail = line[range.lowerBound...]
+            let parts = tail.split(separator: " ").prefix(5)
+            return parts.joined(separator: " ")
+        }
+        return String(line.prefix(80))
     }
 
     // MARK: - Helpers
