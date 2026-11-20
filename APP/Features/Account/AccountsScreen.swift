@@ -31,6 +31,12 @@ struct AccountsScreen: View {
                 DButton(title: "add_account".localized, icon: "plus") {
                     showAdd = true
                 }
+
+                if store.savedAccounts.count == 1 {
+                    DNote(text: L("switch_account_hint", "Add a second Apple ID to switch between accounts here."))
+                } else if store.savedAccounts.count > 1 {
+                    DNote(text: L("switch_account_hint2", "Tap Switch on any account to make it the active one. Downloads and purchases use it."))
+                }
             }
             .padding(.horizontal, G.gutter)
             .padding(.top, G.headerTop)

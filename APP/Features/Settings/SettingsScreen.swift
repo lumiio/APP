@@ -193,22 +193,52 @@ struct SettingsScreen: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
 
-            Button {
-                Haptics.tap()
-                path.append(.accounts)
-            } label: {
-                Text(L("edit_profile", "编辑资料"))
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(p.text)
-                    .padding(.horizontal, 18)
+            HStack(spacing: 8) {
+                Button {
+                    Haptics.tap()
+                    path.append(.accounts)
+                } label: {
+                    Text(L("edit_profile", "编辑资料"))
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(p.text)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 8)
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .strokeBorder(p.line, lineWidth: 1)
+                        )
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    Haptics.tap()
+                    path.append(.accounts)
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "arrow.left.arrow.right")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text(L("switch_account", "切换账号"))
+                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .foregroundStyle(p.accent)
+                    .padding(.horizontal, 16)
                     .padding(.vertical, 8)
                     .overlay(
                         Capsule(style: .continuous)
-                            .strokeBorder(p.line, lineWidth: 1)
+                            .strokeBorder(p.accent.opacity(0.4), lineWidth: 1)
                     )
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .padding(.top, 2)
+
+            if let account = store.selectedAccount {
+                Text(account.email)
+                    .font(.system(size: 12))
+                    .foregroundStyle(p.muted)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
 
             Rectangle()
                 .fill(p.line)
