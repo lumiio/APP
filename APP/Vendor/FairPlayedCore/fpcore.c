@@ -208,39 +208,72 @@ int fp_attempt(const char *path, const fp_slice_t *s, int mode, bool addsigs, ui
         if (fcntl(fd, F_ADDFILESIGS_RETURN, &fs) == -1) res->sig_errno = errno;
     }
 
-    uint64_t map_len = ((uint64_t)s->cryptoff + s->cryptsize + pg - 1) & ~(pg - 1);
-    int prot = PROT_READ | (mode == FP_MODE_RX_CID1 ? PROT_EXEC : 0);
-    uint8_t *base = mmap(NULL, map_len, prot, MAP_PRIVATE, fd, (off_t)s->slice_off);
-    if (base == MAP_FAILED) { res->mmap_errno = errno; close(fd); res->ms = now_ms() - t0; return -1; }
-
     uint8_t *orig = malloc(s->cryptsize);
     uint8_t *dec = out ? out : malloc(s->cryptsize);
     if (!orig || !dec || !pread_full(fd, orig, s->cryptsize, (off_t)(s->slice_off + s->cryptoff))) {
-        free(orig); if (!out) free(dec); munmap(base, map_len); close(fd); res->mmap_errno = EIO; return -1;
+        free(orig); if (!out) free(dec); close(fd); res->mmap_errno = EIO; return -1;
     }
 
+    // mremap_encrypted sizes the whole range at once, which the kernel refuses with
+    // ENOMEM on large binaries. Walk it in page-aligned windows instead, halving the
+    // window whenever the kernel reports ENOMEM.
     uint32_t cid = (mode == FP_MODE_R_CID2) ? 2 : 1;
-    errno = 0;
-    res->mremap_ret = do_mremap_encrypted(base + s->cryptoff, s->cryptsize, cid, s->cputype, s->cpusubtype);
-    res->mremap_errno = res->mremap_ret == 0 ? 0 : errno;
+    int prot = PROT_READ | (mode == FP_MODE_RX_CID1 ? PROT_EXEC : 0);
+    uint64_t chunk = 4ull << 20;
+    if (chunk > s->cryptsize) chunk = s->cryptsize;
+    chunk = (chunk + pg - 1) & ~(pg - 1);
+    if (chunk == 0) chunk = pg;
 
-    if (res->mremap_ret == 0) {
-        uint64_t total = (s->cryptsize + pg - 1) / pg;
-        res->pages_total = total;
-        for (uint64_t i = 0; i < total; i++) {
-            uint64_t off = i * pg;
-            uint64_t n = (off + pg <= s->cryptsize) ? pg : (s->cryptsize - off);
+    uint64_t off = 0;
+    bool any_changed = false;
+    int rc = 0;
+    while (off < s->cryptsize) {
+        uint64_t n = chunk;
+        if (off + n > s->cryptsize) n = s->cryptsize - off;
+        uint64_t map_len = s->cryptoff + off + n;
+        map_len = (map_len + pg - 1) & ~(pg - 1);
+        uint8_t *base = mmap(NULL, map_len, prot, MAP_PRIVATE, fd, (off_t)s->slice_off);
+        if (base == MAP_FAILED) { res->mmap_errno = errno; rc = -1; break; }
+
+        errno = 0;
+        int mr = do_mremap_encrypted(base + s->cryptoff + off, n, cid, s->cputype, s->cpusubtype);
+        if (mr != 0) {
+            int e = errno;
+            munmap(base, map_len);
+            // A saturated 4 MB window is common; retry the same offset smaller.
+            if (e == ENOMEM && chunk > pg) {
+                chunk = (chunk / 2 + pg - 1) & ~(pg - 1);
+                if (chunk == 0) chunk = pg;
+                continue;
+            }
+            res->mremap_ret = -1;
+            res->mremap_errno = e;
+            rc = -1;
+            break;
+        }
+
+        uint64_t pages = (n + pg - 1) / pg;
+        for (uint64_t i = 0; i < pages; i++) {
+            uint64_t p_off = i * pg;
+            uint64_t p_n = (p_off + pg <= n) ? pg : (n - p_off);
             vm_size_t got = 0;
-            kern_return_t kr = vm_read_overwrite(mach_task_self(), (vm_address_t)(base + s->cryptoff + off), (vm_size_t)n,
-                                                 (vm_address_t)(dec + off), &got);
-            if (kr == KERN_SUCCESS && got == n) {
+            kern_return_t kr = vm_read_overwrite(mach_task_self(), (vm_address_t)(base + s->cryptoff + off + p_off),
+                                                 (vm_size_t)p_n, (vm_address_t)(dec + off + p_off), &got);
+            res->pages_total++;
+            if (kr == KERN_SUCCESS && got == p_n) {
                 res->pages_ok++;
             } else {
-                if (!res->first_fail_kr) { res->first_fail_kr = kr ? kr : -1; res->first_fail_off = s->cryptoff + off; }
-                memset(dec + off, 0, n);
+                if (!res->first_fail_kr) { res->first_fail_kr = kr ? kr : -1; res->first_fail_off = s->cryptoff + off + p_off; }
+                memset(dec + off + p_off, 0, p_n);
             }
         }
-        res->changed = memcmp(orig, dec, s->cryptsize) != 0;
+        if (memcmp(orig + off, dec + off, n) != 0) any_changed = true;
+        munmap(base, map_len);
+        off += n;
+    }
+    res->changed = any_changed;
+    if (rc == 0) res->mremap_ret = 0;
+    if (rc == 0) {
         res->ret_after = code_words(dec, s->cryptsize);
         res->ent_after = entropy(dec, s->cryptsize);
     }
@@ -249,7 +282,6 @@ int fp_attempt(const char *path, const fp_slice_t *s, int mode, bool addsigs, ui
 
     free(orig);
     if (!out) free(dec);
-    munmap(base, map_len);
     close(fd);
     res->ms = now_ms() - t0;
     return (res->mremap_ret == 0 && res->pages_ok == res->pages_total && res->changed) ? 0 : -1;
