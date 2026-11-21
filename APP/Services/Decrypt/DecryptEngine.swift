@@ -73,6 +73,7 @@ enum DecryptEngine {
         emit?(.phase(.decrypt))
         var processed = 0
         var failureLine: String?
+        var failureEntry: String?
         let stats = try FairPlayBridge.decryptTree(
             appDirectory: bundle,
             cancel: { cancel?.isCancelled ?? false },
@@ -81,7 +82,7 @@ enum DecryptEngine {
                 emit?(.progress(processed: processed, total: binaries.count))
                 if status < 0 {
                     emit?(.failedEntry(path))
-                    if failureLine == nil { failureLine = "\(path.lastPathComponent) 解密失败" }
+                    if failureEntry == nil { failureEntry = (path as NSString).lastPathComponent + " 解密失败" }
                 }
             },
             onLog: { line in
@@ -93,7 +94,7 @@ enum DecryptEngine {
 
         if stats.decrypted == 0 && stats.failed > 0 {
             emit?(.log("main binary rejected by FairPlay"))
-            throw DecryptError.notDecryptable(failureLine.map(Self.shortReason) ?? "")
+            throw DecryptError.notDecryptable((failureLine ?? failureEntry).map(Self.shortReason) ?? "")
         }
 
         // Nothing was encrypted: keep the original archive byte for byte.
